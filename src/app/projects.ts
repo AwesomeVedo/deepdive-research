@@ -1,42 +1,144 @@
+/* ============================================================================
+   DOMAIN TYPES
+   ---------------------------------------------------------------------------
+   These define what a Project is and how operations report success or failure.
+============================================================================ */
+
 export type Project = {
-    id: string;
-    name: string;
-    createdAt: number;
-    updatedAt: number;
+  id: string;
+  name: string;
+  createdAt: number;
+  updatedAt: number;
+};
+
+/* --------------------------------- Results -------------------------------- */
+
+export type CreateProjectResult =
+  | { ok: true; project: Project }
+  | { ok: false; error: string };
+
+export type EditProjectResult =
+  | { ok: true; project: Project }
+  | { ok: false; error: string };
+
+export type DeleteProjectResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+export type GetProjectResult =
+  | { ok: true; project: Project }
+  | { ok: false; error: string };
+
+/* --------------------------------- Patches -------------------------------- */
+
+export type ProjectPatch = {
+  name?: string;
+};
+
+/* ============================================================================
+   STORAGE CONFIG
+============================================================================ */
+
+const KEY = "dd_projects";
+
+/* ============================================================================
+   LOW-LEVEL STORAGE HELPERS
+   ---------------------------------------------------------------------------
+   These directly interact with localStorage.
+============================================================================ */
+
+export function listProjects(): Project[] {
+  const storedProjects = localStorage.getItem(KEY);
+  if (!storedProjects) return [];
+  return JSON.parse(storedProjects) as Project[];
+}
+
+export function saveProjects(projects: Project[]) {
+  localStorage.setItem(KEY, JSON.stringify(projects));
+}
+
+/* ============================================================================
+   READ OPERATIONS
+============================================================================ */
+
+export function getProjectById(id: string): GetProjectResult {
+  const project = listProjects().find((p) => p.id === id);
+
+  if (!project) {
+    return { ok: false, error: "Project not found" };
+  }
+
+  return { ok: true, project };
+}
+
+/* ============================================================================
+   WRITE OPERATIONS
+============================================================================ */
+
+export function createProject(name: string): CreateProjectResult {
+  const trimmedName = name.trim();
+
+  if (!trimmedName) {
+    return { ok: false, error: "Project name is required" };
+  }
+
+  const now = Date.now();
+
+  const newProject: Project = {
+    id: crypto.randomUUID(),
+    name: trimmedName,
+    createdAt: now,
+    updatedAt: now,
   };
-  
-  const KEY = "dd_projects";
 
-  export function listProjects(): Project[] {
+  const projects = listProjects();
+  saveProjects([newProject, ...projects]);
 
-    const storedProjects = localStorage.getItem(KEY);
-  
-    if (!storedProjects) {
-      return [];
+  return { ok: true, project: newProject };
+}
+
+export function editProject(id: string, patch: ProjectPatch ): EditProjectResult {
+  // Validate patch (v1: only name)
+  if (patch.name !== undefined) {
+    const trimmedName = patch.name.trim();
+    if (!trimmedName) {
+      return { ok: false, error: "Project name is required" };
     }
-  
-    return JSON.parse(storedProjects) as Project[];
-
+    patch = { ...patch, name: trimmedName };
   }
-  
-  export function saveProjects(projects: Project[]) {
-    localStorage.setItem(KEY, JSON.stringify(projects));
+
+  const projects = listProjects();
+  const existing = projects.find((p) => p.id === id);
+
+  if (!existing) {
+    return { ok: false, error: "Project not found" };
   }
-  
-  export function createProject(name:string) : Project | null {
-    const trimmedName = name.trim();
-    if (!trimmedName) return null;
-    const now = Date.now();
 
-    const newProject : Project = {
-      id: crypto.randomUUID(),
-      name: trimmedName,
-      createdAt: now,
-      updatedAt: now
-    };
+  const updated: Project = {
+    ...existing,
+    ...patch,
+    updatedAt: Date.now(),
+  };
 
-    const projects = listProjects();
-    saveProjects([newProject, ...projects]);
-    return newProject;
+  const nextProjects = projects.map((p) =>
+    p.id === id ? updated : p
+  );
 
+  saveProjects(nextProjects);
+
+  return { ok: true, project: updated };
+}
+
+export function deleteProject(id: string): DeleteProjectResult {
+  const projects = listProjects();
+  const exists = projects.some((p) => p.id === id);
+
+  if (!exists) {
+    return { ok: false, error: "Project not found" };
   }
+
+  const nextProjects = projects.filter((p) => p.id !== id);
+  saveProjects(nextProjects);
+
+  return { ok: true };
+}
