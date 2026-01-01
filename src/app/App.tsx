@@ -1,15 +1,16 @@
+import Header from "../components/Header";
 import { Outlet } from "react-router-dom";
-import Nav from "../components/Nav";
 import "./App.css";
 
 export function App() {
   return (
-    <div style={{ padding: 16 }}>
-      <Nav />
-
-      <h1>DeepDive Research</h1>
-
-      <Outlet />
+    <div className="app-layout">
+      <Header />
+      <main className="page">
+        <div className="inner-wrap">
+          <Outlet />
+        </div>
+      </main>
     </div>
   );
 }

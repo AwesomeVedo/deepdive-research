@@ -7,7 +7,7 @@ export default function Nav() {
     const { loggedIn } = useAuth();
 
     return (
-        <nav style={{ display: "flex", gap: 12, padding: 16 }}>
+        <nav style={{ display: "flex", gap: 12, padding: 16, alignItems: "center" }}>
             <NavLink to="/">Home</NavLink>
 
             {loggedIn ? (

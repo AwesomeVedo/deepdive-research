@@ -6,6 +6,7 @@ import { Home } from "../pages/Home";
 import { About } from "../pages/About";
 import { Login } from "../pages/Login";
 import { Dashboard } from "../pages/Dashboard";
+import { ProjectView } from "../pages/ProjectView";
 import ProtectedRoute from "./ProtectedRoute";
 import { routes } from "./routes";
 
@@ -23,6 +24,13 @@ function elementFor(path: string) {
                     <Dashboard />
                 </ProtectedRoute>
             );
+        case "/dashboard/projects/:id":
+            return (
+                <ProtectedRoute>
+                    <ProjectView />
+                </ProtectedRoute>
+            );
+
         default:
             return <div>Not found</div>;
     }
@@ -30,6 +38,7 @@ function elementFor(path: string) {
 
 const children: RouteObject[] = [
     { index: true, element: elementFor("/") },
+    { path: "dashboard/projects/:id", element: elementFor("/dashboard/projects/:id") },
 
     ...routes
         .filter((r) => r.path !== "/")

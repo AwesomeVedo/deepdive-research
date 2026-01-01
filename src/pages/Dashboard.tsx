@@ -1,92 +1,75 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useProjects } from "../app/useProjects";
+import "../app/App.css";
+import "./dashboard.css";
 
 export function Dashboard() {
-    const { projects, create, edit, remove } = useProjects();
+    const { projects, create, remove } = useProjects();
+    const navigate = useNavigate();
 
     const [name, setName] = useState("");
-
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [draftName, setDraftName] = useState("");
 
     const hasProjects = projects.length > 0;
 
     return (
         <>
-            <p>Dashboard page</p>
+            {/*<h2 style={{ textAlign: "center", margin: 0 }}>Dashboard</h2>*/}
+            <div className="dash">
 
-            {/* Create */}
-            <form
-                onSubmit={(e) => {
-                    e.preventDefault();
+                <section className="dash__left">
 
-                    const result = create(name);
+                    <h3>Start A New Project</h3>
+                    {/* Create */}
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
 
-                    if (!result.ok) {
-                        alert(result.error);
-                        return;
-                    }
+                            const result = create(name);
 
-                    setName("");
-                }}
-            >
-                <input
-                    type="text"
-                    placeholder="Enter Project Title"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                />
-                <button type="submit">Create</button>
-            </form>
+                            if (!result.ok) {
+                                alert(result.error);
+                                return;
+                            }
 
-            {!hasProjects ? (
-                <p>No projects yet</p>
-            ) : (
-                <ul>
-                    {projects.map((project) => {
-                        const isEditing = project.id === editingId;
+                            setName("");
+                        }}
+                    >
+                        <input
+                            type="text"
+                            placeholder="Enter Project Title"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                        />
+                        <button type="submit">Create</button>
+                    </form>
+                </section>
+                <section className="dash__right">
+                    <h2>All Projects</h2>
+                    {!hasProjects ? (
+                        <p>No projects yet</p>
+                    ) : (
 
-                        return (
-                            <li key={project.id}>
-                                {isEditing ? (
-                                    <>
-                                        <input
-                                            value={draftName}
-                                            onChange={(e) => setDraftName(e.target.value)}
-                                        />
+                        <ul className="project-list">
+                            {projects.map((project) => (
+                                <li key={project.id} className="project-row">
+                                    <span className="project-title">
+                                        {project.name}
+                                    </span>
 
-                                        {/* Save */}
+                                    <div className="project-actions">
                                         <button
                                             type="button"
-                                            onClick={() => {
-                                                const result = edit(project.id, { name: draftName });
-
-                                                if (!result.ok) {
-                                                    alert(result.error);
-                                                    return;
-                                                }
-
-                                                setEditingId(null);
-                                                setDraftName("");
-                                            }}
+                                            onClick={() =>
+                                                navigate(`/dashboard/projects/${project.id}`)
+                                            }
                                         >
-                                            Save
+                                            View
                                         </button>
 
-                                        {/* Cancel */}
                                         <button
                                             type="button"
-                                            onClick={() => {
-                                                setEditingId(null);
-                                                setDraftName("");
-                                            }}
-                                        >
-                                            Cancel
-                                        </button>
-
-                                        {/* Delete */}
-                                        <button
-                                            type="button"
+                                            className="danger"
                                             onClick={() => {
                                                 const confirmed = window.confirm(
                                                     `Delete "${project.name}"? This cannot be undone.`
@@ -94,46 +77,6 @@ export function Dashboard() {
                                                 if (!confirmed) return;
 
                                                 const result = remove(project.id);
-
-                                                if (!result.ok) {
-                                                    alert(result.error);
-                                                    return;
-                                                }
-
-                                                // If you were editing this item, exit editing mode
-                                                if (editingId === project.id) {
-                                                    setEditingId(null);
-                                                    setDraftName("");
-                                                }
-                                            }}
-                                        >
-                                            Delete
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span>{project.name}</span>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setEditingId(project.id);
-                                                setDraftName(project.name);
-                                            }}
-                                        >
-                                            Edit
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const confirmed = window.confirm(
-                                                    `Delete "${project.name}"? This cannot be undone.`
-                                                );
-                                                if (!confirmed) return;
-
-                                                const result = remove(project.id);
-
                                                 if (!result.ok) {
                                                     alert(result.error);
                                                     return;
@@ -142,15 +85,16 @@ export function Dashboard() {
                                         >
                                             Delete
                                         </button>
-                                    </>
-                                )}
-                            </li>
-                        );
-                    })}
-                </ul>
-            )}
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
 
-            <pre>{JSON.stringify(projects, null, 2)}</pre>
+                    )}
+
+                    {/*<pre>{JSON.stringify(projects, null, 2)}</pre>*/}
+                </section>
+            </div>
         </>
     );
 }

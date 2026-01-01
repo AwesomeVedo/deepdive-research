@@ -16,7 +16,7 @@ export function Login() {
 
     return (
         <>
-            <h1>Login</h1>
+            <h1>DeepDive Research</h1>
             <button
                 onClick={() => {
                     logIn();
