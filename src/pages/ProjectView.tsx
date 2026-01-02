@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProjects } from "../app/useProjects";
+import { EditIcon, CancelIcon } from "../components/icons/Icon";
 
 type Params = {
     id?: string;
@@ -50,95 +51,101 @@ export function ProjectView() {
                 ← Back to Dashboard
             </button>
 
-            <h1 style={{ marginTop: 12 }}>{project.name}</h1>
+            <div className="project-title-row">
+                {!isEditing ? (
+                    <span className="project-title">{project.name}</span>
+                ) : (
+                    <>
+                        <label style={{ display: "block" }}>
+                            <input
+                                className="editing-title"
+                                value={draftName}
+                                onChange={(e) => setDraftName(e.target.value)}
+                                placeholder="Enter new name"
+                            />
+                        </label>
 
-            {!isEditing ? (
-                <>
-                    <p>
-                        <strong>Created:</strong>{" "}
-                        {new Date(project.createdAt).toLocaleString()}
-                    </p>
+                        <div style={{ display: "flex", gap: 8 }}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const result = edit(project.id, { name: draftName });
 
-                    <p>
-                        <strong>Updated:</strong>{" "}
-                        {new Date(project.updatedAt).toLocaleString()}
-                    </p>
+                                    if (!result.ok) {
+                                        alert(result.error);
+                                        return;
+                                    }
 
-                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setIsEditing(true);
-                                setDraftName(project.name);
-                            }}
-                        >
-                            Edit name
-                        </button>
+                                    setIsEditing(false);
+                                    setDraftName("");
+                                }}
+                            >
+                                Save
+                            </button>
 
-                        <button
-                            type="button"
-                            onClick={() => {
-                                const confirmed = window.confirm(
-                                    `Delete "${project.name}"? This cannot be undone.`
-                                );
-                                if (!confirmed) return;
-
-                                const result = remove(project.id);
-                                if (!result.ok) {
-                                    alert(result.error);
-                                    return;
-                                }
-
-                                navigate("/dashboard");
-                            }}
-                        >
-                            Delete project
-                        </button>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <label style={{ display: "block", marginTop: 12 }}>
-                        <div style={{ marginBottom: 6 }}>
-                            <strong>Project name</strong>
+                            <button
+                                type="button"
+                                className="icon-button"
+                                onClick={() => {
+                                    setIsEditing(false);
+                                    setDraftName("");
+                                }}
+                            >
+                                <CancelIcon />
+                            </button>
                         </div>
-                        <input
-                            value={draftName}
-                            onChange={(e) => setDraftName(e.target.value)}
-                            placeholder="Enter new name"
-                        />
-                    </label>
+                    </>
+                )}
 
-                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                const result = edit(project.id, { name: draftName });
 
-                                if (!result.ok) {
-                                    alert(result.error);
-                                    return;
-                                }
+                <button
+                    type="button"
+                    className="icon-button"
+                    onClick={() => {
+                        setIsEditing(true);
+                        setDraftName(project.name);
+                    }}
+                    aria-label="Edit project name"
+                >
+                    <EditIcon />
+                </button>
+            </div>
+            <>
+                <p>
+                    <strong>Created:</strong>{" "}
+                    {new Date(project.createdAt).toLocaleString()}
+                </p>
 
-                                setIsEditing(false);
-                                setDraftName("");
-                            }}
-                        >
-                            Save
-                        </button>
+                <p>
+                    <strong>Updated:</strong>{" "}
+                    {new Date(project.updatedAt).toLocaleString()}
+                </p>
 
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setIsEditing(false);
-                                setDraftName("");
-                            }}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </>
-            )}
+                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+
+
+                    <button
+                        type="button"
+                        className="delete-button"
+                        onClick={() => {
+                            const confirmed = window.confirm(
+                                `Delete "${project.name}"? This cannot be undone.`
+                            );
+                            if (!confirmed) return;
+
+                            const result = remove(project.id);
+                            if (!result.ok) {
+                                alert(result.error);
+                                return;
+                            }
+
+                            navigate("/dashboard");
+                        }}
+                    >
+                        Delete project
+                    </button>
+                </div>
+            </>
         </div>
     );
 }

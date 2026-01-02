@@ -69,7 +69,7 @@ export function Dashboard() {
 
                                         <button
                                             type="button"
-                                            className="danger"
+                                            className="danger delete-button"
                                             onClick={() => {
                                                 const confirmed = window.confirm(
                                                     `Delete "${project.name}"? This cannot be undone.`
@@ -92,7 +92,7 @@ export function Dashboard() {
 
                     )}
 
-                    {/*<pre>{JSON.stringify(projects, null, 2)}</pre>*/}
+                    <pre>{JSON.stringify(projects, null, 2)}</pre>
                 </section>
             </div>
         </>

@@ -9,6 +9,9 @@ export type Project = {
   name: string;
   createdAt: number;
   updatedAt: number;
+  description: string;
+  tags: string;   // keep as a simple comma string for now
+
 };
 
 /* --------------------------------- Results -------------------------------- */
@@ -47,11 +50,30 @@ const KEY = "dd_projects";
    These directly interact with localStorage.
 ============================================================================ */
 
+type StoredProject = Partial<Project> & { id: string };
+
 export function listProjects(): Project[] {
   const storedProjects = localStorage.getItem(KEY);
   if (!storedProjects) return [];
-  return JSON.parse(storedProjects) as Project[];
+
+  const raw = JSON.parse(storedProjects) as StoredProject[];
+  return raw.map((p) => normalizeProject(p));
 }
+
+function normalizeProject(p: StoredProject): Project {
+  const now = Date.now();
+
+  return {
+    id: String(p.id),
+    name: String(p.name ?? ""),
+    createdAt: Number(p.createdAt ?? now),
+    updatedAt: Number(p.updatedAt ?? now),
+    description: String(p.description ?? ""),
+    tags: String(p.tags ?? ""),
+  };
+}
+
+
 
 export function saveProjects(projects: Project[]) {
   localStorage.setItem(KEY, JSON.stringify(projects));
@@ -89,6 +111,8 @@ export function createProject(name: string): CreateProjectResult {
     name: trimmedName,
     createdAt: now,
     updatedAt: now,
+    description: "",
+    tags:""
   };
 
   const projects = listProjects();
