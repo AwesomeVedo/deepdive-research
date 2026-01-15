@@ -3,6 +3,14 @@
    ---------------------------------------------------------------------------
    These define what a Project is and how operations report success or failure.
 ============================================================================ */
+export type ProjectNote = {
+  id: string;
+  subject: string;
+  body: string;
+  createdAt: number;
+  updatedAt: number;
+  tags: string;
+}
 
 export type Project = {
   id: string;
@@ -11,6 +19,7 @@ export type Project = {
   updatedAt: number;
   description: string;
   tags: string;   // keep as a simple comma string for now
+  notes: ProjectNote[];
 
 };
 
@@ -32,12 +41,20 @@ export type GetProjectResult =
   | { ok: true; project: Project }
   | { ok: false; error: string };
 
+  export type AddProjectNoteResult =
+  | { ok: true; project: Project; noteId: string }
+  | { ok: false; error: string };
+
 /* --------------------------------- Patches -------------------------------- */
 
 export type ProjectPatch = {
   name?: string;
 };
-
+export type ProjectNotePatch = {
+  subject?: string;
+  body?: string;
+  tags?: string;
+}
 /* ============================================================================
    STORAGE CONFIG
 ============================================================================ */
@@ -70,8 +87,10 @@ function normalizeProject(p: StoredProject): Project {
     updatedAt: Number(p.updatedAt ?? now),
     description: String(p.description ?? ""),
     tags: String(p.tags ?? ""),
+    notes: Array.isArray(p.notes) ? p.notes : [],
   };
 }
+
 
 
 
@@ -112,7 +131,8 @@ export function createProject(name: string): CreateProjectResult {
     createdAt: now,
     updatedAt: now,
     description: "",
-    tags:""
+    tags:"",
+    notes: []
   };
 
   const projects = listProjects();
@@ -165,4 +185,90 @@ export function deleteProject(id: string): DeleteProjectResult {
   saveProjects(nextProjects);
 
   return { ok: true };
+}
+// Creates default values for note.
+// Called by addProjectNote.
+export function createProjectNote() : ProjectNote {
+  const now = Date.now();
+  return {
+    id: crypto.randomUUID(),
+    subject: "Untitled Note",
+    body: "",
+    createdAt: now,
+    updatedAt: now,
+    tags: "",
+  }
+}
+
+export function addProjectNote(projectId: string): AddProjectNoteResult {
+  const projects = listProjects();
+  const existing = projects.find((p) => p.id === projectId);
+
+  if (!existing) {
+    return { ok: false, error: "Project not found" };
+  }
+
+  const newNote = createProjectNote();
+  const now = Date.now();
+
+  const updatedProject: Project = {
+    ...existing,
+    notes: [newNote, ...existing.notes], // newest first
+    updatedAt: now,
+  };
+
+  const nextProjects = projects.map((p) =>
+    p.id === projectId ? updatedProject : p
+  );
+
+  saveProjects(nextProjects);
+
+  return { ok: true, project: updatedProject, noteId: newNote.id };
+}
+
+export function updateProjectNote(projectId: string, noteId: string, patch: ProjectNotePatch): EditProjectResult
+{
+  const projects = listProjects();
+  const existingProject = projects.find((p) => p.id === projectId);
+
+  if (!existingProject) {
+    return { ok: false, error: "Project not found" };
+  }
+
+  const existingNote = existingProject.notes.find(
+    (n) => n.id === noteId
+  );
+
+  if (!existingNote) {
+    return { ok: false, error: "Note not found" };
+  }
+
+  const now = Date.now();
+
+  // 1) Create the updated note (FULL note, not a patch)
+  const updatedNote: ProjectNote = {
+    ...existingNote,
+    ...patch,
+    updatedAt:now,
+  }
+
+  const nextNotes = existingProject.notes.map((n) => 
+    n.id === noteId ? updatedNote : n
+  );
+
+  // 3) Create updated project
+  const updatedProject: Project = {
+    ...existingProject,
+    notes: nextNotes,
+    updatedAt: now,
+  };
+
+  // 4) Replace project in projects array
+  const nextProjects = projects.map((p) =>
+    p.id === projectId ? updatedProject : p
+  );
+
+  saveProjects(nextProjects);
+
+  return { ok: true, project: updatedProject };
 }
