@@ -45,6 +45,10 @@ export type GetProjectResult =
   | { ok: true; project: Project; noteId: string }
   | { ok: false; error: string };
 
+  export type DeleteProjectNoteResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
 /* --------------------------------- Patches -------------------------------- */
 
 export type ProjectPatch = {
@@ -171,6 +175,44 @@ export function editProject(id: string, patch: ProjectPatch ): EditProjectResult
   saveProjects(nextProjects);
 
   return { ok: true, project: updated };
+}
+
+export function deleteProjectNote(projectId: string, noteId: string): DeleteProjectNoteResult {
+  const projects = listProjects();
+  const existingProject = projects.find((p) => p.id === projectId);
+  const notes = existingProject?.notes ?? [];
+
+  if (!existingProject) {
+    return { ok: false, error: "Project not found" };
+  }
+
+  const existingNote = notes.find(
+    (n) => n.id === noteId
+  );
+
+  if (!existingNote) {
+    return { ok: false, error: "Note not found" };
+  }
+
+  const now = Date.now(); 
+
+  // remove note
+  const nextNotes = notes.filter((n) => n.id !== noteId);
+
+  // update project fields
+  const nextProject = {
+    ...existingProject,
+    notes: nextNotes,
+    updatedAt: now,
+  }
+
+  // replace in projects array
+  const nextProjects = projects.map((p) => 
+    p.id === projectId ? nextProject : p
+  );
+
+  saveProjects(nextProjects);
+  return { ok : true }
 }
 
 export function deleteProject(id: string): DeleteProjectResult {

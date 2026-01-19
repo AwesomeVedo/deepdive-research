@@ -6,6 +6,7 @@ import {
   deleteProject,
   addProjectNote,
   updateProjectNote,
+  deleteProjectNote,
   type Project,
   type ProjectPatch,
   type ProjectNotePatch,
@@ -54,7 +55,15 @@ export function useProjects() {
     return result;
   }
 
-  return { projects, refresh, create, edit, remove, addNote, updateNote };
+  function deleteNote(projectId: string, noteId: string) {
+    const result = deleteProjectNote(projectId, noteId);
+    if (!result.ok) return result;
+    refresh();
+    return result;
+  }
+  
+
+  return { projects, refresh, create, edit, remove, addNote, updateNote, deleteNote };
 }
 
 

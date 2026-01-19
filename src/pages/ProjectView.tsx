@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProjects } from "../app/useProjects";
 import { EditIcon, CancelIcon } from "../components/icons/Icon";
@@ -11,7 +11,9 @@ export function ProjectView() {
     const { id } = useParams<Params>();
     const navigate = useNavigate();
 
-    const { projects, edit, remove, addNote, updateNote } = useProjects();
+    const { projects, edit, remove, addNote, updateNote, deleteNote } =
+        useProjects();
+
     // STATES
     const [isEditing, setIsEditing] = useState(false);
     const [draftName, setDraftName] = useState("");
@@ -19,28 +21,23 @@ export function ProjectView() {
     const [subjectDraft, setSubjectDraft] = useState("");
     const [bodyDraft, setBodyDraft] = useState("");
 
-
     const project = useMemo(() => {
         if (!id) return undefined;
         return projects.find((p) => p.id === id);
     }, [projects, id]);
+
     const projectNotes = project?.notes ?? [];
     const activeNote = projectNotes.find((n) => n.id === activeNoteId);
 
-    useEffect(() => {
-        if (!activeNote) {
-            setSubjectDraft("");
-            setBodyDraft("");
-            return;
-        }
-        setSubjectDraft(activeNote.subject ?? "");
-        setBodyDraft(activeNote.body ?? "");
-    }, [activeNote]);
-
+    function clearNoteSelection() {
+        setActiveNoteId(null);
+        setSubjectDraft("");
+        setBodyDraft("");
+    }
 
     if (!id) {
         return (
-            <div >
+            <div>
                 <h2>Invalid project URL</h2>
                 <p>Missing project id.</p>
                 <button type="button" onClick={() => navigate("/dashboard")}>
@@ -115,7 +112,6 @@ export function ProjectView() {
                         </>
                     )}
 
-
                     <button
                         type="button"
                         className="icon-button"
@@ -128,39 +124,61 @@ export function ProjectView() {
                         <EditIcon />
                     </button>
                 </div>
+
                 <>
+                    <hr />
+                    <h3>Notes</h3>
+
                     {projectNotes.length === 0 ? (
                         <p>No notes yet...</p>
                     ) : (
-                        <ul>
+                        <ul style={{ paddingLeft: 0 }}>
                             {projectNotes.map((note) => (
                                 <li
                                     key={note.id}
                                     data-id={note.id}
-                                    onClick={() => setActiveNoteId(note.id)}
+                                    onClick={() => {
+                                        setActiveNoteId(note.id);
+                                        setSubjectDraft(note.subject ?? "");
+                                        setBodyDraft(note.body ?? "");
+                                    }}
+                                    style={{
+                                        cursor: "pointer",
+                                        fontWeight: note.id === activeNoteId ? 700 : 400,
+                                        listStyle: "none",
+                                        backgroundColor: note.id === activeNoteId ? "#ffdf00" : "transparent",
+                                    }}
                                 >
-                                    {note.subject}
+                                    {note.subject || "(Untitled)"}
                                 </li>
                             ))}
-
                         </ul>
-
                     )}
 
                     <button
                         type="button"
-                        className=""
                         onClick={() => {
                             const result = addNote(project.id);
                             if (!result.ok) {
                                 alert(result.error);
                                 return;
                             }
+
+                            setActiveNoteId(result.noteId);
+
+                            const createdNote = result.project.notes?.find(
+                                (n) => n.id === result.noteId
+                            );
+                            setSubjectDraft(createdNote?.subject ?? "");
+                            setBodyDraft(createdNote?.body ?? "");
                         }}
                         aria-label="Add New Note"
                     >
                         Add New Note
                     </button>
+                    <br />
+                    <br />
+                    <hr />
                     <p>
                         <strong>Created:</strong>{" "}
                         {new Date(project.createdAt).toLocaleString()}
@@ -172,8 +190,6 @@ export function ProjectView() {
                     </p>
 
                     <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-
-
                         <button
                             type="button"
                             className="delete-button"
@@ -197,8 +213,8 @@ export function ProjectView() {
                     </div>
                 </>
             </div>
+
             <div className="dash__right">
-                {/* <pre>{JSON.stringify(activeNote, null, 2)}</pre> */}
                 {!activeNote ? (
                     <p>Please select note...</p>
                 ) : (
@@ -212,12 +228,45 @@ export function ProjectView() {
                             value={bodyDraft}
                             onChange={(e) => setBodyDraft(e.target.value)}
                         />
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const result = updateNote(project.id, activeNote.id, {
+                                    subject: subjectDraft,
+                                    body: bodyDraft,
+                                });
+
+                                if (!result.ok) {
+                                    alert(result.error);
+                                    return;
+                                }
+                            }}
+                        >
+                            Save Note
+                        </button>
+
+                        <button
+                            type="button"
+                            style={{ backgroundColor: "red" }}
+                            onClick={() => {
+                                const confirmed = window.confirm("Delete this note?");
+                                if (!confirmed) return;
+
+                                const result = deleteNote(project.id, activeNote.id);
+                                if (!result.ok) {
+                                    alert(result.error);
+                                    return;
+                                }
+
+                                clearNoteSelection();
+                            }}
+                        >
+                            Delete Note
+                        </button>
                     </>
                 )}
-                {/* <pre>{activeNote?.subject}</pre> */}
-
             </div>
-
         </div>
     );
 }
