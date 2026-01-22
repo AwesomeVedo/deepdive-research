@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProjects } from "../app/useProjects";
 import { EditIcon, CancelIcon } from "../components/icons/Icon";
+import { RichTextEditor } from "../components/RichTextEditor";
+//import Tiptap from "../components/Tiptap";
 
 type Params = {
     id?: string;
@@ -131,6 +133,7 @@ export function ProjectView() {
 
                     {projectNotes.length === 0 ? (
                         <p>No notes yet...</p>
+
                     ) : (
                         <ul style={{ paddingLeft: 0 }}>
                             {projectNotes.map((note) => (
@@ -216,7 +219,7 @@ export function ProjectView() {
 
             <div className="dash__right">
                 {!activeNote ? (
-                    <p>Please select note...</p>
+                    <p>Let's dive in!</p>
                 ) : (
                     <>
                         <input
@@ -224,10 +227,9 @@ export function ProjectView() {
                             value={subjectDraft}
                             onChange={(e) => setSubjectDraft(e.target.value)}
                         />
-                        <textarea
+                        <RichTextEditor
                             value={bodyDraft}
-                            onChange={(e) => setBodyDraft(e.target.value)}
-                        />
+                            onChange={setBodyDraft} />
 
                         <button
                             type="button"
@@ -267,6 +269,6 @@ export function ProjectView() {
                     </>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
