@@ -19,7 +19,7 @@ export function Dashboard() {
 
                 <section className="dash__left">
 
-                    <h3>Start A New Project</h3>
+                    <h3>Create a new Focus Area</h3>
                     {/* Create */}
                     <form
                         onSubmit={(e) => {
@@ -45,9 +45,9 @@ export function Dashboard() {
                     </form>
                 </section>
                 <section className="dash__right">
-                    <h2>All Projects</h2>
+                    <h2>Focus Areas</h2>
                     {!hasProjects ? (
-                        <p>No projects yet</p>
+                        <p>Nothing to show yet...</p>
                     ) : (
 
                         <ul className="project-list">
