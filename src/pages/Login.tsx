@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { logIn } from "../app/auth";
+import { logIn } from "../services/auth";
 
 type LocationState = {
     from?: {

@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { logOut } from "../app/auth";
-import { useAuth } from "../app/useAuth";
+import { logOut } from "../services/auth";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Nav() {
     const navigate = useNavigate();

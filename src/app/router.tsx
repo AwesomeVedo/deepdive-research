@@ -5,7 +5,7 @@ import { App } from "./App";
 import { Home } from "../pages/Home";
 import { About } from "../pages/About";
 import { Login } from "../pages/Login";
-import { Dashboard } from "../pages/Dashboard";
+import { Dashboard } from "../pages/Dashboard/Dashboard";
 import { ProjectView } from "../pages/ProjectView";
 import ProtectedRoute from "./ProtectedRoute";
 import { routes } from "./routes";

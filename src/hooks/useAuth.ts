@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from "react";
-import { isLoggedIn, subscribeAuth } from "./auth";
+import { isLoggedIn, subscribeAuth } from "../services/auth";
 
 export function useAuth() {
   const loggedIn = useSyncExternalStore(

@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { isLoggedIn } from "./auth";
+import { isLoggedIn } from "../services/auth";
 import type { ReactNode } from "react";
 
 export default function ProtectedRoute({

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useProjects } from "../app/useProjects";
+import { useProjects } from "../hooks/useProjects";
 import { EditIcon, CancelIcon } from "../components/icons/Icon";
 import { RichTextEditor } from "../components/RichTextEditor";
 //import Tiptap from "../components/Tiptap";

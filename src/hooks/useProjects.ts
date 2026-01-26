@@ -10,7 +10,7 @@ import {
   type Project,
   type ProjectPatch,
   type ProjectNotePatch,
-} from "./projects";
+} from "../services/projects";
 
 export function useProjects() {
   // Lazy init: runs listProjects() only once on first render
