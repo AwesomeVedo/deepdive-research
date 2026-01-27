@@ -125,7 +125,7 @@ export function createVent(title: string): CreateVentResult {
   const trimmedTitle = title.trim();
 
   if (!trimmedTitle) {
-    return { ok: false, error: "Let's stay organzied... Title required." }
+    return { ok: false, error: "Let's stay organzied... a title is required." }
   }
 
   const now = Date.now();
@@ -151,7 +151,7 @@ export function editVent(id: string, patch: VentPatch): EditVentResult {
   // Check if nextPatch title exists
   if (nextPatch.title !== undefined) {
     const t = nextPatch.title.trim();
-    if (!t) return { ok: false, error: "Vent title is required" };
+    if (!t) return { ok: false, error: "A Vent title is required" };
     nextPatch.title = t;
   }
   // Check if nextPatch description exists
@@ -183,5 +183,22 @@ export function editVent(id: string, patch: VentPatch): EditVentResult {
   saveVents(nextVents);
 
   return { ok: true, vent: updated }
+
+}
+
+export function deleteVent(id: string): DeleteVentResult {
+
+  const vents = listVents();
+  const existingVent = vents.some((v) => v.id === id);
+
+  if (!existingVent) {
+    return { ok: false, error: "Could not find the Vent specified." }
+  }
+
+  const nextVents = vents.filter((v) => v.id !== id);
+
+  saveVents(nextVents);
+
+  return { ok: true }
 
 }
