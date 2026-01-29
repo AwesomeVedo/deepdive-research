@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { logOut } from "../services/auth";
-import { useAuth } from "../hooks/useAuth";
+import { logOut } from "../../services/auth";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function Nav() {
     const navigate = useNavigate();
@@ -9,9 +9,9 @@ export default function Nav() {
     return (
         <nav style={{ display: "flex", gap: 12, padding: 16, alignItems: "center" }}>
             <NavLink to="/">Home</NavLink>
-
             {loggedIn ? (
                 <>
+                    <NavLink to="/braindump">Braindump</NavLink>
                     <NavLink to="/dashboard">Dashboard</NavLink>
                     <button
                         onClick={() => {
