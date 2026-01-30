@@ -5,7 +5,8 @@ import { App } from "./App";
 import { Home } from "../pages/Home";
 import { About } from "../pages/About";
 import { Login } from "../pages/Login";
-import { Dashboard } from "../pages/Dashboard";
+import { Dashboard } from "../pages/Dashboard/Dashboard";
+import { Braindump } from "../pages/Braindump/Braindump";
 import { ProjectView } from "../pages/ProjectView";
 import ProtectedRoute from "./ProtectedRoute";
 import { routes } from "./routes";
@@ -28,6 +29,12 @@ function elementFor(path: string) {
             return (
                 <ProtectedRoute>
                     <ProjectView />
+                </ProtectedRoute>
+            );
+        case "/braindump":
+            return (
+                <ProtectedRoute>
+                    <Braindump />
                 </ProtectedRoute>
             );
 

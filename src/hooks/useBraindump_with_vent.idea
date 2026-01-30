@@ -1,0 +1,46 @@
+import { useState, useCallback } from "react";
+import { listVents, createVent, editVent, deleteVent, type Vent, type VentPatch } from "../services/braindump";
+
+
+export function useBraindump() {
+
+    const [vents, setVents] = useState<Vent[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const refresh = useCallback(async () => {
+        setIsLoading(true);
+        const next = await Promise.resolve(listVents()); // later: await api.listVents()
+        setVents(next);
+        setIsLoading(false);
+    }, []);
+
+    async function create(title: string) {
+        const result = createVent(title);
+        if (!result.ok) return result;
+        await refresh();
+        return result;
+    }
+
+    async function edit(ventId: string, patch: VentPatch) {
+        const result = editVent(ventId, patch);
+        if (!result.ok) return result;
+        await refresh();
+        return result;
+    }
+
+    async function remove(ventId: string) {
+        const result = deleteVent(ventId);
+        if(!result.ok) return result;
+        await refresh();
+        return result;
+    }
+
+    return { vents, isLoading, refresh, create, edit, remove };
+}
+
+
+
+
+
+
+

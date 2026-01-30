@@ -8,7 +8,7 @@ export default function Header() {
         <>
             <div className="site-header">
                 <div className="header-inner">
-                    <div className="header-left"><h1>DDR</h1></div>
+                    <div className="header-left"><h1>Headspace</h1></div>
                     <div className="header-nav"></div>
                     <div className="header-right"><Nav /></div>
                 </div>
