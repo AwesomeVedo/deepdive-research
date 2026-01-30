@@ -23,6 +23,10 @@ export type CreateVentItemResult =
 export type EditVentItemResult =
   | { ok: true, ventItem: VentItem }
   | { ok: false, error: string };
+
+  export type RemoveVentItemResult =
+  | { ok: true }
+  | { ok: false, error: string };
 /* --------------------------------- Patches -------------------------------- */
 export type VentItemPatch = {
   title?: string;
@@ -150,3 +154,15 @@ export function editVentItem(id: string, patch: VentItemPatch) : EditVentItemRes
   
     return { ok: true, ventItem: updated };
 }
+
+export function removeVentItem(id: string): RemoveVentItemResult {
+  const ventItems = listVentItems();
+  const exists = ventItems.some((i) => i.id === id);
+
+  if (!exists) return { ok: false, error: "Vent Item does not exist." }
+
+  const nextVentItems = ventItems.filter((i) => i.id !== id);
+  saveVentItems(nextVentItems);
+
+  return { ok: true };
+} 

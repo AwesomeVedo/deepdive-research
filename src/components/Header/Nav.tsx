@@ -7,8 +7,8 @@ export default function Nav() {
     const { loggedIn } = useAuth();
 
     return (
-        <nav style={{ display: "flex", gap: 12, padding: 16, alignItems: "center" }}>
-            <NavLink to="/">Home</NavLink>
+        <nav style={{ display: "flex", gap: 32, padding: 16, alignItems: "center" }}>
+            {/* <NavLink to="/">Home</NavLink> */}
             {loggedIn ? (
                 <>
                     <NavLink to="/braindump">Braindump</NavLink>

@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { listVents, createVent, editVent, deleteVent, type Vent, type VentPatch } from "../services/braindump";
 
 
-export function useBraindump() {
+export function useVents() {
 
     const [vents, setVents] = useState<Vent[]>([]);
     const [isLoading, setIsLoading] = useState(false);

@@ -1,5 +1,4 @@
-import { PencilSquareIcon } from '@heroicons/react/24/solid'
-import { XMarkIcon } from '@heroicons/react/24/solid'
+import { PencilSquareIcon, XMarkIcon, PlusIcon } from '@heroicons/react/24/solid'
 
 export function EditIcon() {
     return (
@@ -16,3 +15,12 @@ export function CancelIcon() {
         </div>
     )
 }
+
+export function AddIcon() {
+    return (
+        <div className='icon-button'>
+            <PlusIcon />
+        </div>
+    )
+}
+
