@@ -1,0 +1,10 @@
+.control-pair--inline {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+
+.control-pair--input button {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}

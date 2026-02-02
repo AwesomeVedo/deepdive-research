@@ -68,6 +68,21 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+.input {
+  background-color: #e9e8e8;
+  border: 1px solid #c1c1c1;
+  padding: 0.85em 1.2em;
+  color: #213547;
+}
+
+.control-pair--inline .input {
+  border-radius: 8px 0 0 8px;
+}
+
+.control-pair--inline button {
+  border-radius: 0 8px 8px 0;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

@@ -35,13 +35,16 @@ export function Dashboard() {
                             setName("");
                         }}
                     >
-                        <input
-                            type="text"
-                            placeholder="Enter Project Title"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                        />
-                        <button type="submit">Create</button>
+                        <div className="control-pair--inline">
+                            <input
+                                className="input"
+                                type="text"
+                                placeholder="Enter Project Title"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                            <button type="submit">Create</button>
+                        </div>
                     </form>
                 </section>
                 <section className="dash__right">
