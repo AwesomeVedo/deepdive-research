@@ -8,7 +8,6 @@ export type VentItem = {
   title: string;
   when: "today" | "soon" | "later";
   stressLevel: number; // 1-10
-  difficultyLevel: number; // 1-10
   focusAreaId: string | null;
   status: "active" | "archived";
   createdAt: number;
@@ -32,7 +31,6 @@ export type VentItemPatch = {
   title?: string;
   when?: VentItem["when"];
   stressLevel?: number;
-  difficultyLevel?: number;
   focusAreaId?: VentItem["focusAreaId"];
   status?: VentItem["status"];
 }
@@ -82,7 +80,6 @@ function normalizeVentItem(item: StoredVentItem, now: number): VentItem {
     title: String(item.title ?? ""),
     when: item.when === "today" || item.when === "soon" || item.when === "later" ? item.when : "soon",
     stressLevel: Number(item.stressLevel ?? 0),
-    difficultyLevel: Number(item.difficultyLevel ?? 0),
     focusAreaId: typeof item.focusAreaId === "string" ? item.focusAreaId : null,
     status: item.status === "active" || item.status === "archived" ? item.status : "active",
     createdAt: Number(item.createdAt ?? now),
@@ -99,18 +96,21 @@ export function saveVentItems(ventItems: VentItem[]) {
  WRITE OPERATIONS
 ============================================================================ */
 
-export function createVentItem(title: string): CreateVentItemResult {
+export function createVentItem(title: string, when: string, stressLevel: number): CreateVentItemResult {
   const trimmedTitle = title.trim();
-  if (!trimmedTitle) return { ok: false, error: "Vent Item title is required" };
+
+  if (!when) return { ok: false, error: `"When" field is required` };
+  if (when !== "today" && when !== "soon" && when !== "later") return { ok: false, error: `Invalid value: ${when}` };
+  if (!trimmedTitle) return { ok: false, error: `"Title" field is required` };
+  if (!stressLevel) return { ok: false, error: `"Stress Level" field is required` };
 
   const now = Date.now();
 
   const newVentItem: VentItem = {
     id: crypto.randomUUID(),
     title: trimmedTitle,
-    when: "soon",
-    stressLevel: 2,
-    difficultyLevel: 2,
+    when: when,
+    stressLevel: stressLevel,
     focusAreaId: null,
     status: "active",
     createdAt: now,
