@@ -16,3 +16,19 @@ ul {
 li {
     list-style-type: none;
 }
+
+form.vent-item-form {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    row-gap: 10px;
+    background-color: #f5f5f5;
+    padding: 1em;
+}
+
+form.vent-item-form label {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}

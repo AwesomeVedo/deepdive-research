@@ -6,7 +6,7 @@
 export type VentItem = {
   id: string;
   title: string;
-  when: "today" | "soon" | "later";
+  when: "Today" | "Soon" | "Later";
   stressLevel: number; // 1-10
   focusAreaId: string | null;
   status: "active" | "archived";
@@ -78,7 +78,7 @@ function normalizeVentItem(item: StoredVentItem, now: number): VentItem {
   return {
     id: String(item.id ?? crypto.randomUUID()),
     title: String(item.title ?? ""),
-    when: item.when === "today" || item.when === "soon" || item.when === "later" ? item.when : "soon",
+    when: item.when === "Today" || item.when === "Soon" || item.when === "Later" ? item.when : "Soon",
     stressLevel: Number(item.stressLevel ?? 0),
     focusAreaId: typeof item.focusAreaId === "string" ? item.focusAreaId : null,
     status: item.status === "active" || item.status === "archived" ? item.status : "active",
@@ -100,9 +100,17 @@ export function createVentItem(title: string, when: string, stressLevel: number)
   const trimmedTitle = title.trim();
 
   if (!when) return { ok: false, error: `"When" field is required` };
-  if (when !== "today" && when !== "soon" && when !== "later") return { ok: false, error: `Invalid value: ${when}` };
+  if (when !== "Today" && when !== "Soon" && when !== "Later") return { ok: false, error: `Invalid value: ${when}` };
   if (!trimmedTitle) return { ok: false, error: `"Title" field is required` };
-  if (!stressLevel) return { ok: false, error: `"Stress Level" field is required` };
+  if (
+    stressLevel === undefined ||
+    stressLevel === null ||
+    stressLevel < 0 ||
+    stressLevel > 9
+  ) {
+    return { ok: false, error: `"Stress Level" must be between 0 and 9` };
+  }
+  
 
   const now = Date.now();
 

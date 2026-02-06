@@ -1,13 +1,12 @@
 .site-header {
     width: 100%;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg);
+    border-bottom: 1px solid #d5d5d5;
+    background: var(--bg-color);
 }
 
 .header-inner {
-    max-width: 1420px;
     margin: 0 auto;
-    padding: 0 16px;
+    padding: 1em 2em;
     display: flex;
     align-items: center;
 }
@@ -27,4 +26,13 @@
     flex: 0 0 auto;
     display: flex;
     gap: 12px;
+}
+
+#site-title {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.logout-button {
+    padding: 0;
 }

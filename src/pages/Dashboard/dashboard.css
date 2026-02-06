@@ -1,24 +1,28 @@
 .dash {
     display: flex;
-    gap: 16px;
+    gap: 25px;
     align-items: flex-start;
-    border: 3px solid green;
+    flex-direction: row;
+    flex-wrap: wrap;
+    min-height: calc(100vh - 58.391px);
+}
+
+.dash__top {
+    width: 100%;
 }
 
 .dash__left {
-    flex: 0 0 360px;
-    /* fixed-ish left column */
-    border: 1px solid red;
-    padding: 0 0 25px 25px;
+    flex: 0 0 250px;
+    padding: 0 25px 25px 0;
+    overflow: hidden;
+    min-height: calc(100vh - 83.391px);
+    border-right: 1px solid rgb(234, 234, 235);
 }
 
 .dash__right {
     flex: 1;
-    /* fills the rest */
     min-width: 0;
-    /* prevents weird overflow with long content */
-    border: 1px solid blue;
-    padding: 0 25px 25px 25px;
+    padding: 0 0 25px 0;
 }
 
 .project-list {

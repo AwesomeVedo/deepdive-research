@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "../../hooks/useProjects";
-import "../../app/App.css";
 import "./dashboard.css";
 
 export function Dashboard() {

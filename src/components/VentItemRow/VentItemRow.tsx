@@ -1,6 +1,9 @@
 // VentItemRow.tsx
 import { useState } from "react";
-import type { EditVentItemResult, RemoveVentItemResult, VentItem, VentItemPatch } from "../services/braindump";
+import type { EditVentItemResult, RemoveVentItemResult, VentItem, VentItemPatch } from "../../services/braindump";
+import { CalendarIcon, StressIcon, MoreActionsIcon, DeleteIcon, EditIcon } from "../icons/Icon";
+
+import "./VentItemRow.css";
 
 type VentItemRowProps = {
     item: VentItem;
@@ -11,44 +14,76 @@ type VentItemRowProps = {
 export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
 
     const [isEditing, setIsEditing] = useState<boolean>(false);
+    const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
     const [draftTitle, setDraftTitle] = useState("");
-    const [draftWhen, setDraftWhen] = useState<"today" | "soon" | "later">("soon");
+    const [draftWhen, setDraftWhen] = useState<"Today" | "Soon" | "Later">("Soon");
     const [draftStress, setDraftStress] = useState<number>(0);
 
     const id = item.id;
     const title = item.title;
     const when = item.when;
-    const stressLevel = item.stressLevel
+    const stressLevel = item.stressLevel;
 
     return (
         !isEditing ? (
             <>
-                {title}{" "}
-                {when}
-                {"Stress Level: "}{stressLevel}
-                <button
-                    type="button"
-                    onClick={() => {
-                        setIsEditing(true);
-                        setDraftTitle(title);
-                        setDraftWhen(when);
-                        setDraftStress(stressLevel);
-                    }}
-                >
-                    Edit
-                </button>
-                <button
-                    type="button"
-                    onClick={async () => {
-                        const result = await onRemove(id);
-                        if (!result.ok) {
-                            alert(result.error);
-                            return;
+                <li className="vent-item">
+                    <div className="vent-item-col-left">
+                        <div className="vent-item-title">{title}</div>
+                    </div>
+                    <div className="vent-item-col-right">
+                        <div className="vent-item-options">
+                            <span className="when-text vent-item-option">
+                                <CalendarIcon />
+                                <span>{when}</span>
+                            </span>
+                            <span className="stress-level-text vent-item-option">
+                                <StressIcon />
+                                <span>Stress Lvl:</span>
+                                <span>{stressLevel}</span>
+                            </span>
+                        </div>
+
+                        <MoreActionsIcon
+                            onClick={() => setIsMenuOpen((v) => !v)}
+                        />
+
+                        {
+                            isMenuOpen &&
+                            <div className="vent-item-menu">
+
+                                <button
+                                    type="button"
+                                    className="edit"
+                                    onClick={() => {
+                                        setIsEditing(true);
+                                        setIsMenuOpen(false);
+                                        setDraftTitle(title);
+                                        setDraftWhen(when);
+                                        setDraftStress(stressLevel);
+                                    }}
+                                >
+                                    <EditIcon /> Edit
+                                </button>
+                                <button
+                                    type="button"
+                                    className="delete"
+                                    onClick={async () => {
+                                        const result = await onRemove(id);
+                                        if (!result.ok) {
+                                            alert(result.error);
+                                            return;
+                                        }
+                                    }}
+                                >
+                                    <DeleteIcon /> Delete
+                                </button>
+                            </div>
                         }
-                    }}
-                >
-                    X
-                </button>
+
+
+                    </div>
+                </li>
             </>
         ) : (
             <>
@@ -66,16 +101,16 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                         value={draftWhen}
                         onChange={(e) => {
                             const value = e.target.value;
-                            if (value === "soon" || value === "today" || value === "later") {
+                            if (value === "Soon" || value === "Today" || value === "Later") {
                                 setDraftWhen(value);
                             }
                         }
                         }
 
                     >
-                        <option value="today">Today</option>
-                        <option value="soon">Soon</option>
-                        <option value="later">Later</option>
+                        <option value="Today">Today</option>
+                        <option value="Soon">Soon</option>
+                        <option value="Later">Later</option>
                     </select>
                 </label>
                 <label htmlFor="draft-stress">Stress
@@ -115,7 +150,7 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                         }
                         setIsEditing(false);
                         setDraftTitle("");
-                        setDraftWhen("soon");
+                        setDraftWhen("Soon");
                         setDraftStress(0);
                     }}
                 >
@@ -126,7 +161,7 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                     onClick={() => {
                         setIsEditing(false);
                         setDraftTitle("");
-                        setDraftWhen("soon");
+                        setDraftWhen("Soon");
                         setDraftStress(0);
                     }}
                 >
