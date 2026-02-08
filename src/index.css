@@ -15,7 +15,7 @@
   --button-text-color: white;
   --link-color: var(--text-color);
   --link-hover-color: #787878;
-  --metadata-color: #707070;
+  --metadata-color: #8f8f8f;
 
   --primary-color-1: #10576d;
   --delete-red: #750000;
@@ -151,6 +151,7 @@ button {
 button.icon-button {
   background: none;
   padding: 0;
+  color: var(--text-color);
 }
 
 .icon-button svg {

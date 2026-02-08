@@ -9,7 +9,8 @@ export type VentItem = {
   when: "Today" | "Soon" | "Later";
   stressLevel: number; // 1-10
   focusAreaId: string | null;
-  status: "active" | "archived";
+  status: "Active" | "Archived";
+  resolution: "Open" | "Completed" | "Released" | "Deferred";
   createdAt: number;
   updatedAt: number;
 };
@@ -33,6 +34,7 @@ export type VentItemPatch = {
   stressLevel?: number;
   focusAreaId?: VentItem["focusAreaId"];
   status?: VentItem["status"];
+  resolution?: VentItem["resolution"];
 }
 /* ============================================================================
    STORAGE CONFIG
@@ -49,11 +51,12 @@ const KEY = "dd_vent_item";
 // Partial makes all remaining Vent fields optional to reflect messy stored data.
 // `id` is re-required, and `items` is reintroduced as `unknown` to force validation.
 
-type StoredVentItem = Partial<Omit<VentItem, "when" | "status" | "focusAreaId">> & {
+type StoredVentItem = Partial<Omit<VentItem, "when" | "status" | "focusAreaId" | "resolution">> & {
   id?: unknown;
   when?: unknown;
   status?: unknown;
   focusAreaId?: unknown;
+  resolution?: unknown;
 }
 
 
@@ -81,7 +84,8 @@ function normalizeVentItem(item: StoredVentItem, now: number): VentItem {
     when: item.when === "Today" || item.when === "Soon" || item.when === "Later" ? item.when : "Soon",
     stressLevel: Number(item.stressLevel ?? 0),
     focusAreaId: typeof item.focusAreaId === "string" ? item.focusAreaId : null,
-    status: item.status === "active" || item.status === "archived" ? item.status : "active",
+    status: item.status === "Active" || item.status === "Archived" ? item.status : "Active",
+    resolution: item.resolution === "Completed" || item.resolution === "Deferred" || item.resolution === "Open" || item.resolution === "Released" ? item.resolution : "Open",
     createdAt: Number(item.createdAt ?? now),
     updatedAt: Number(item.updatedAt ?? now),
   };
@@ -120,7 +124,8 @@ export function createVentItem(title: string, when: string, stressLevel: number)
     when: when,
     stressLevel: stressLevel,
     focusAreaId: null,
-    status: "active",
+    status: "Active",
+    resolution: "Open",
     createdAt: now,
     updatedAt: now,
   }
