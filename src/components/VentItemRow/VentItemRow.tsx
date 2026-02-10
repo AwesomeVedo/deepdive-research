@@ -1,5 +1,5 @@
 // VentItemRow.tsx
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { EditVentItemResult, RemoveVentItemResult, VentItem, VentItemPatch } from "../../services/braindump";
 import { CalendarIcon, StressIcon, MoreActionsIcon, DeleteIcon, EditIcon, DefferedIcon, OpenIcon, CompletedIcon, ReleasedIcon, CancelIcon, VentItemSaveIcon } from "../icons/Icon";
 
@@ -19,6 +19,7 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
     const [draftWhen, setDraftWhen] = useState<"Today" | "Soon" | "Later">("Soon");
     const [draftResolution, setDraftResolution] = useState<"Open" | "Released" | "Completed" | "Deferred">("Open");
     const [draftStress, setDraftStress] = useState<number>(0);
+    const actionsRef = useRef<HTMLDivElement>(null);
 
     const id = item.id;
     const title = item.title;
@@ -33,6 +34,22 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
     } as const;
 
     const fillPercent = (stressLevel / 9) * 100;
+
+    useEffect(() => {
+        if (!isMenuOpen) return;
+
+        function onDocMouseDown(e: MouseEvent) {
+            const el = actionsRef.current;
+            if (!el) return;
+            if (e.target instanceof Node && !el.contains(e.target)) {
+                setIsMenuOpen(false);
+            }
+        }
+
+        document.addEventListener("mousedown", onDocMouseDown);
+        return () => document.removeEventListener("mousedown", onDocMouseDown);
+    }, [isMenuOpen]);
+
 
     return (
         !isEditing ? (
@@ -63,46 +80,46 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                                 <span>{stressLevel}</span>
                             </span>
                         </div>
+                        <div ref={actionsRef} className="vent-item-actions">
+                            <MoreActionsIcon
+                                onClick={() => setIsMenuOpen((v) => !v)}
+                            />
 
-                        <MoreActionsIcon
-                            onClick={() => setIsMenuOpen((v) => !v)}
-                        />
+                            {
+                                isMenuOpen &&
+                                <div className="vent-item-menu">
 
-                        {
-                            isMenuOpen &&
-                            <div className="vent-item-menu">
+                                    <button
+                                        type="button"
+                                        className="edit"
+                                        onClick={() => {
+                                            setIsEditing(true);
+                                            setIsMenuOpen(false);
+                                            setDraftTitle(title);
+                                            setDraftWhen(when);
+                                            setDraftStress(stressLevel);
+                                            setDraftResolution(resolution);
+                                        }}
+                                    >
+                                        <EditIcon /> Edit
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="delete"
+                                        onClick={async () => {
+                                            const result = await onRemove(id);
+                                            if (!result.ok) {
+                                                alert(result.error);
+                                                return;
+                                            }
+                                        }}
+                                    >
+                                        <DeleteIcon /> Delete
+                                    </button>
+                                </div>
+                            }
 
-                                <button
-                                    type="button"
-                                    className="edit"
-                                    onClick={() => {
-                                        setIsEditing(true);
-                                        setIsMenuOpen(false);
-                                        setDraftTitle(title);
-                                        setDraftWhen(when);
-                                        setDraftStress(stressLevel);
-                                        setDraftResolution(resolution);
-                                    }}
-                                >
-                                    <EditIcon /> Edit
-                                </button>
-                                <button
-                                    type="button"
-                                    className="delete"
-                                    onClick={async () => {
-                                        const result = await onRemove(id);
-                                        if (!result.ok) {
-                                            alert(result.error);
-                                            return;
-                                        }
-                                    }}
-                                >
-                                    <DeleteIcon /> Delete
-                                </button>
-                            </div>
-                        }
-
-
+                        </div>
                     </div>
                 </li>
             </>

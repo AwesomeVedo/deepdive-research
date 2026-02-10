@@ -1,5 +1,6 @@
 .vent-item {
     --fill: 0%;
+    height: 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -104,6 +105,7 @@ li.vent-item.editing {
     line-height: 0.85em;
     padding: 0;
     border: 1px solid black;
+    height: 42px;
 }
 
 li.vent-item.editing label {
