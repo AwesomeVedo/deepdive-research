@@ -9,6 +9,26 @@
     border-bottom-left-radius: 0;
 }
 
+.vent-filter--controls {
+    position: absolute;
+    right: 0;
+    margin-top: 1em;
+    display: flex;
+}
+
+.vent-filter--controls .input {
+    padding: 8px;
+}
+
+select.input.vent-filter--show {
+    margin-right: 16px;
+}
+
+.vent-filter--controls .icon-button {
+    color: var(--primary-color-1);
+    width: 20px;
+}
+
 ul {
     padding-left: 0;
 }

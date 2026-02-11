@@ -1,9 +1,26 @@
 // Icon.tsx
 import { PencilSquareIcon, XMarkIcon, PlusIcon, CalendarDaysIcon, ExclamationTriangleIcon, EllipsisVerticalIcon, TrashIcon, CheckCircleIcon, CubeTransparentIcon, MinusCircleIcon, PauseCircleIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { EyeIcon, FunnelIcon } from '@heroicons/react/16/solid';
 
 type MoreActionsIconProps = {
     onClick?: () => void;
 };
+
+export function ShowIcon() {
+    return (
+        <div className='icon-button show-icon'>
+            <EyeIcon />
+        </div>
+    )
+}
+
+export function FilterIcon() {
+    return (
+        <div className='icon-button filter-icon'>
+            <FunnelIcon />
+        </div>
+    )
+}
 
 export function VentItemSaveIcon() {
     return (

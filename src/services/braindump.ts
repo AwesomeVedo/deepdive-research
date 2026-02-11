@@ -1,16 +1,22 @@
+/* --------------------------------- Unions -------------------------------- */
+
+export type When = "Today" | "Soon" | "Later";
+export type Resolution = "Open" | "Deferred" | "Completed" | "Released";
+
 /* ============================================================================
    DOMAIN TYPES
    ---------------------------------------------------------------------------
    These define what a Braindump (Vent) is and how operations report success or failure.
 ============================================================================ */
+
 export type VentItem = {
   id: string;
   title: string;
-  when: "Today" | "Soon" | "Later";
+  when: When;
   stressLevel: number; // 1-10
   focusAreaId: string | null;
   status: "Active" | "Archived";
-  resolution: "Open" | "Completed" | "Released" | "Deferred";
+  resolution: Resolution;
   createdAt: number;
   updatedAt: number;
 };
@@ -36,6 +42,8 @@ export type VentItemPatch = {
   status?: VentItem["status"];
   resolution?: VentItem["resolution"];
 }
+
+
 /* ============================================================================
    STORAGE CONFIG
 ============================================================================ */

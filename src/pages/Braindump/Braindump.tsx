@@ -2,15 +2,109 @@
 import { useState } from "react";
 import { useVentItems } from "../../hooks/useVentItems";
 import { VentItemRow } from "../../components/VentItemRow/VentItemRow";
+import { FilterIcon, ShowIcon } from "../../components/icons/Icon";
 import "./braindump.css";
+
+type sortMode = "Smart" | "Stress" | "When" | "Newest" | "Oldest";
+type showMode = "Open" | "Resolved" | "All";
 
 export function Braindump() {
     const { ventItems, create, edit, remove } = useVentItems();
     const [itemTitle, setItemTitle] = useState("");
     const [itemWhen, setItemWhen] = useState<"Today" | "Soon" | "Later">("Soon");
     const [itemStress, setItemStress] = useState<number>(0);
+    const [sortMode, setSortMode] = useState<sortMode>("Smart");
+    const [showMode, setShowMode] = useState<showMode>("Open");
 
 
+    function whenRank(when?: string): number {
+        switch (when) {
+            case "Today":
+                return 0;
+            case "Soon":
+                return 1;
+            case "Later":
+                return 2;
+            default:
+                return 99;
+        }
+    }
+
+    function resolutionRank(resolution?: string): number {
+        switch (resolution) {
+            case "Open":
+                return 0;
+            case "Deferred":
+                return 1;
+            case "Completed":
+                return 2;
+            case "Released":
+                return 3;
+            default:
+                return 99;
+        }
+    }
+
+    function isResolved(resolution?: string): boolean {
+        switch (resolution) {
+            case "Completed":
+                return true;
+            case "Released":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    const visibleVentItems = ventItems.filter((item) => {
+        if (showMode === "All") return true;
+        if (showMode === "Open") return !isResolved(item.resolution);
+        // "Resolved"
+        return isResolved(item.resolution);
+    });
+    const copied = [...visibleVentItems];
+    copied.sort((a, b) => {
+        if (sortMode === "Newest") { return b.createdAt - a.createdAt; }
+        if (sortMode === "Oldest") { return a.createdAt - b.createdAt; }
+        if (sortMode === "Stress") {
+            // 3: stress (higher first)
+            const s = b.stressLevel - a.stressLevel;
+            if (s !== 0) return s;
+            // 4: tie-breaker (newer first)
+            return b.createdAt - a.createdAt;
+        }
+        if (sortMode === "When") {
+            // 2: When (Today first) 
+            const w = whenRank(a.when) - whenRank(b.when);
+            if (w !== 0) return w;
+            // 3: stress (higher first)
+            const s = b.stressLevel - a.stressLevel;
+            if (s !== 0) return s;
+            // 4: tie-breaker (newer first)
+            return b.createdAt - a.createdAt;
+        }
+
+        // Smart (default)
+
+        // 1: Resolution (Open first)
+        const r = resolutionRank(a.resolution) - resolutionRank(b.resolution);
+        if (r !== 0) return r;
+
+        // 2: When (Today first) 
+        const w = whenRank(a.when) - whenRank(b.when);
+        if (w !== 0) return w;
+
+        // 3: stress (higher first)
+        const s = b.stressLevel - a.stressLevel;
+        if (s !== 0) return s;
+
+        // 4: tie-breaker (newer first)
+        return b.createdAt - a.createdAt;
+
+
+    });
+
+    const sortedVentItems = copied;
 
     return (
         <div className="dash">
@@ -96,9 +190,49 @@ export function Braindump() {
 
             </div>
             <div className="dash__right">
+                <div className="vent-filter--controls">
+                    <ShowIcon />
+                    <select
+                        name="vent-filter--show"
+                        className="input vent-filter--show"
+                        value={showMode}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "Open" || value === "Resolved" || value === "All") {
+                                setShowMode(value);
+                            }
+                        }
+                        }
+
+                    >
+                        <option value="All">All</option>
+                        <option value="Open">Open</option>
+                        <option value="Resolved">Resolved</option>
+                    </select>
+                    <FilterIcon />
+                    <select
+                        name="vent-filter--sort"
+                        className="input vent-filter--sort"
+                        value={sortMode}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "Smart" || value === "Stress" || value === "When" || value === "Newest" || value === "Oldest") {
+                                setSortMode(value);
+                            }
+                        }
+                        }
+
+                    >
+                        <option value="Smart">Smart</option>
+                        <option value="Stress">Stress</option>
+                        <option value="When">When</option>
+                        <option value="Newest">Newest</option>
+                        <option value="Oldest">Oldest</option>
+                    </select>
+                </div>
                 <h3>Vents</h3>
                 <ul className="vent-list">
-                    {ventItems.map((item) => (
+                    {sortedVentItems.map((item) => (
                         <VentItemRow
                             key={item.id}
                             item={item}
