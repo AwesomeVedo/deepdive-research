@@ -1,30 +1,44 @@
+/* index.css */
+
+/* Fonts (external, but not a <link> CDN in HTML — it’s a CSS import) */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap");
+
+/* =========================
+   Design tokens + defaults
+   ========================= */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-heading: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --bg-color: white;
+  --text-color: #3e3e3e;
+  --button-text-color: white;
+  --link-color: var(--text-color);
+  --link-hover-color: #787878;
+  --metadata-color: #8f8f8f;
+
+  --primary-color-1: #10576d;
+  --delete-red: #750000;
+
   line-height: 1.5;
   font-weight: 400;
   width: 100%;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  --bg-color: white;
-  --bg-text-color: black;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
+/* =========================
+   Base / reset-ish
+   ========================= */
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  font-family: var(--font-body);
 }
 
 body {
@@ -32,14 +46,35 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background-color: var(--bg-color);
-  color: var(--bg-text-color);
+  color: var(--text-color);
 }
 
-html,
-body,
 #root {
-  margin: 0;
+  margin: 0 auto;
   width: 100%;
+}
+
+/* Links */
+a {
+  font-weight: 500;
+  color: var(--link-color);
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: var(--link-hover-color);
+}
+
+/* Headings + UI text font */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+label,
+button {
+  font-family: var(--font-heading);
 }
 
 h1 {
@@ -47,38 +82,145 @@ h1 {
   line-height: 1.1;
 }
 
+/* =========================
+   Global layout utilities
+   ========================= */
+.app-layout {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.page {
+  flex: 1;
+  width: 100%;
+}
+
+.inner-wrap {
+  max-width: unset;
+  margin: 0 auto;
+  padding: 0 2em;
+}
+
+/* =========================
+   Form controls
+   ========================= */
 button {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  color: var(--button-text-color);
+  background-color: var(--primary-color-1);
   cursor: pointer;
   transition: border-color 0.25s;
 }
 
-button:hover {
-  border-color: #646cff;
+.input {
+  background-color: #f5f5f5;
+  border: 1px solid #c1c1c1;
+  padding: 0.85em 1.2em;
+  color: #213547;
 }
 
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.control-pair--inline .input {
+  border-radius: 8px 0 0 8px;
 }
 
+.control-pair--inline button {
+  border-radius: 0 8px 8px 0;
+}
+
+/* =========================
+   Icon button system
+   ========================= */
+.icon-button:not(button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px 0 0;
+  border-radius: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  /* replaced var(--bg-text-color) since it wasn't defined */
+}
+
+button.icon-button {
+  background: none;
+  padding: 0;
+  color: var(--text-color);
+}
+
+.icon-button svg {
+  display: block;
+  width: 22px;
+  color: inherit;
+}
+
+/* Specific tweaks for "more actions" */
+button.icon-button.more-actions {
+  padding-left: 20px;
+}
+
+.icon-button.more-actions svg {
+  color: #464646;
+}
+
+/* =========================
+   Misc utilities / components
+   ========================= */
+.project-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 30px 0;
+}
+
+.editing-title {
+  font-size: 2em;
+  background-color: #e9e9e9;
+  border-radius: 8px;
+  color: #383838;
+  padding: 8px;
+  border: 1px solid grey;
+}
+
+.delete-button {
+  background-color: var(--delete-red);
+}
+
+.delete {
+  color: var(--delete-red) !important;
+}
+
+.logout-button {
+  background-color: unset;
+  color: var(--link-color);
+}
+
+.logout-button:hover {
+  color: var(--link-hover-color)
+}
+
+#login-page {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 100px;
+}
+
+/* =========================
+   Color scheme note
+   ========================= */
+/* You had color-scheme + dark defaults before, but you’re explicitly setting
+   white background + dark text. If you want to keep color-scheme behavior,
+   leave this minimal. */
 @media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-
   a:hover {
     color: #747bff;
-  }
-
-  button {
-    background-color: #f9f9f9;
   }
 }

@@ -23,8 +23,8 @@ export function useVentItems() {
             //setIsLoading(false);
         }, []);
     
-        async function create(title: string): Promise<CreateVentItemResult> {
-            const result = createVentItem(title);
+        async function create(title: string, when: string, stressLevel: number): Promise<CreateVentItemResult> {
+            const result = createVentItem(title, when, stressLevel);
             if (!result.ok) return result;
             await refresh();
             return result;

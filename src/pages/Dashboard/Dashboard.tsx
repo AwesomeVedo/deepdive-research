@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "../../hooks/useProjects";
-import "../../app/App.css";
 import "./dashboard.css";
 
 export function Dashboard() {
@@ -35,13 +34,16 @@ export function Dashboard() {
                             setName("");
                         }}
                     >
-                        <input
-                            type="text"
-                            placeholder="Enter Project Title"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                        />
-                        <button type="submit">Create</button>
+                        <div className="control-pair--inline">
+                            <input
+                                className="input"
+                                type="text"
+                                placeholder="Enter Project Title"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                            <button type="submit">Create</button>
+                        </div>
                     </form>
                 </section>
                 <section className="dash__right">

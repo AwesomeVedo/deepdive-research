@@ -1,0 +1,54 @@
+.control-pair--inline {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+
+.control-pair--input button {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.vent-filter--controls {
+    position: absolute;
+    right: 0;
+    margin-top: 1em;
+    display: flex;
+}
+
+.vent-filter--controls .input {
+    padding: 8px;
+}
+
+select.input.vent-filter--show {
+    margin-right: 16px;
+}
+
+.vent-filter--controls .icon-button {
+    color: var(--primary-color-1);
+    width: 20px;
+}
+
+ul {
+    padding-left: 0;
+}
+
+li {
+    list-style-type: none;
+}
+
+form.vent-item-form {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    row-gap: 10px;
+    background-color: #f5f5f5;
+    padding: 1em;
+}
+
+form.vent-item-form label {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}

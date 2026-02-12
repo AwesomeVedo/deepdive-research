@@ -1,16 +1,22 @@
+/* --------------------------------- Unions -------------------------------- */
+
+export type When = "Today" | "Soon" | "Later";
+export type Resolution = "Open" | "Deferred" | "Completed" | "Released";
+
 /* ============================================================================
    DOMAIN TYPES
    ---------------------------------------------------------------------------
    These define what a Braindump (Vent) is and how operations report success or failure.
 ============================================================================ */
+
 export type VentItem = {
   id: string;
   title: string;
-  when: "today" | "soon" | "later";
+  when: When;
   stressLevel: number; // 1-10
-  difficultyLevel: number; // 1-10
   focusAreaId: string | null;
-  status: "active" | "archived";
+  status: "Active" | "Archived";
+  resolution: Resolution;
   createdAt: number;
   updatedAt: number;
 };
@@ -32,10 +38,12 @@ export type VentItemPatch = {
   title?: string;
   when?: VentItem["when"];
   stressLevel?: number;
-  difficultyLevel?: number;
   focusAreaId?: VentItem["focusAreaId"];
   status?: VentItem["status"];
+  resolution?: VentItem["resolution"];
 }
+
+
 /* ============================================================================
    STORAGE CONFIG
 ============================================================================ */
@@ -51,11 +59,12 @@ const KEY = "dd_vent_item";
 // Partial makes all remaining Vent fields optional to reflect messy stored data.
 // `id` is re-required, and `items` is reintroduced as `unknown` to force validation.
 
-type StoredVentItem = Partial<Omit<VentItem, "when" | "status" | "focusAreaId">> & {
+type StoredVentItem = Partial<Omit<VentItem, "when" | "status" | "focusAreaId" | "resolution">> & {
   id?: unknown;
   when?: unknown;
   status?: unknown;
   focusAreaId?: unknown;
+  resolution?: unknown;
 }
 
 
@@ -80,11 +89,11 @@ function normalizeVentItem(item: StoredVentItem, now: number): VentItem {
   return {
     id: String(item.id ?? crypto.randomUUID()),
     title: String(item.title ?? ""),
-    when: item.when === "today" || item.when === "soon" || item.when === "later" ? item.when : "soon",
+    when: item.when === "Today" || item.when === "Soon" || item.when === "Later" ? item.when : "Soon",
     stressLevel: Number(item.stressLevel ?? 0),
-    difficultyLevel: Number(item.difficultyLevel ?? 0),
     focusAreaId: typeof item.focusAreaId === "string" ? item.focusAreaId : null,
-    status: item.status === "active" || item.status === "archived" ? item.status : "active",
+    status: item.status === "Active" || item.status === "Archived" ? item.status : "Active",
+    resolution: item.resolution === "Completed" || item.resolution === "Deferred" || item.resolution === "Open" || item.resolution === "Released" ? item.resolution : "Open",
     createdAt: Number(item.createdAt ?? now),
     updatedAt: Number(item.updatedAt ?? now),
   };
@@ -99,20 +108,32 @@ export function saveVentItems(ventItems: VentItem[]) {
  WRITE OPERATIONS
 ============================================================================ */
 
-export function createVentItem(title: string): CreateVentItemResult {
+export function createVentItem(title: string, when: string, stressLevel: number): CreateVentItemResult {
   const trimmedTitle = title.trim();
-  if (!trimmedTitle) return { ok: false, error: "Vent Item title is required" };
+
+  if (!when) return { ok: false, error: `"When" field is required` };
+  if (when !== "Today" && when !== "Soon" && when !== "Later") return { ok: false, error: `Invalid value: ${when}` };
+  if (!trimmedTitle) return { ok: false, error: `"Title" field is required` };
+  if (
+    stressLevel === undefined ||
+    stressLevel === null ||
+    stressLevel < 0 ||
+    stressLevel > 9
+  ) {
+    return { ok: false, error: `"Stress Level" must be between 0 and 9` };
+  }
+  
 
   const now = Date.now();
 
   const newVentItem: VentItem = {
     id: crypto.randomUUID(),
     title: trimmedTitle,
-    when: "soon",
-    stressLevel: 2,
-    difficultyLevel: 2,
+    when: when,
+    stressLevel: stressLevel,
     focusAreaId: null,
-    status: "active",
+    status: "Active",
+    resolution: "Open",
     createdAt: now,
     updatedAt: now,
   }
