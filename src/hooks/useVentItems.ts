@@ -8,7 +8,8 @@ import {
     type VentItemPatch, 
     type CreateVentItemResult,
     type EditVentItemResult,
-    type RemoveVentItemResult
+    type RemoveVentItemResult,
+    type When,
  } from "../services/braindump";
 
 export function useVentItems() {
@@ -23,7 +24,7 @@ export function useVentItems() {
             //setIsLoading(false);
         }, []);
     
-        async function create(title: string, when: string, stressLevel: number): Promise<CreateVentItemResult> {
+        async function create(title: string, when: When, stressLevel: number): Promise<CreateVentItemResult> {
             const result = createVentItem(title, when, stressLevel);
             if (!result.ok) return result;
             await refresh();

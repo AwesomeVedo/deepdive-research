@@ -65,6 +65,14 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                     </div>
                     <div className="vent-item-col-right">
                         <div className="vent-item-options">
+                            <button
+                                type="button"
+                                className="start-a-plan button"
+                                onClick={() => {
+                                    alert("worked");
+                                }}
+                            >Start a Plan
+                            </button>
                             <span className="resolution-text vent-item-option">
 
                                 {iconMap[resolution]}

@@ -1,3 +1,4 @@
+// braindump.ts
 /* --------------------------------- Unions -------------------------------- */
 
 export type When = "Today" | "Soon" | "Later";
@@ -6,7 +7,8 @@ export type Resolution = "Open" | "Deferred" | "Completed" | "Released";
 /* ============================================================================
    DOMAIN TYPES
    ---------------------------------------------------------------------------
-   These define what a Braindump (Vent) is and how operations report success or failure.
+   These define what a Braindump is and how operations report success or failure.
+
 ============================================================================ */
 
 export type VentItem = {
@@ -20,6 +22,20 @@ export type VentItem = {
   createdAt: number;
   updatedAt: number;
 };
+export type Plan = {
+  id: string;
+  ventItemId: string;
+  title: string;
+  steps: PlanStep[];
+  createdAt: number;
+  updatedAt: number;
+};
+export type PlanStep = {
+  id: string;
+  content: string;
+  completed: boolean;
+};
+
 
 /* --------------------------------- Results -------------------------------- */
 export type CreateVentItemResult =
@@ -33,6 +49,19 @@ export type EditVentItemResult =
   export type RemoveVentItemResult =
   | { ok: true }
   | { ok: false, error: string };
+
+  export type CreatePlanResult =
+  | { ok: true; plan: Plan }
+  | { ok: false; error: string };
+
+export type EditPlanResult =
+  | { ok: true, plan: Plan }
+  | { ok: false, error: string };
+
+  export type RemovePlanResult =
+  | { ok: true }
+  | { ok: false, error: string };
+
 /* --------------------------------- Patches -------------------------------- */
 export type VentItemPatch = {
   title?: string;
@@ -43,21 +72,23 @@ export type VentItemPatch = {
   resolution?: VentItem["resolution"];
 }
 
+export type PlanPatch = {
+  title?: string;
+  steps?: PlanStep[];
+}
 
 /* ============================================================================
    STORAGE CONFIG
 ============================================================================ */
 
 const KEY = "dd_vent_item";
+const PLANS_KEY = "dd_plans_v1";
 /* ============================================================================
    LOW-LEVEL STORAGE HELPERS
    ---------------------------------------------------------------------------
    These directly interact with localStorage.
 ============================================================================ */
-
-// Omit removes `items` so it can be redefined as untrusted.
-// Partial makes all remaining Vent fields optional to reflect messy stored data.
-// `id` is re-required, and `items` is reintroduced as `unknown` to force validation.
+/* ----------------------------- VENT ITEM --------------------------------- */
 
 type StoredVentItem = Partial<Omit<VentItem, "when" | "status" | "focusAreaId" | "resolution">> & {
   id?: unknown;
@@ -104,11 +135,58 @@ export function saveVentItems(ventItems: VentItem[]) {
   localStorage.setItem(KEY, JSON.stringify(normalized));
 }
 
+/* ----------------------------- PLAN --------------------------------- */
+
+type StoredPlan = Partial<Omit<Plan, "id" | "ventItemId" | "steps" | "createdAt" | "updatedAt">> & {
+  id?: unknown;
+  ventItemId?: unknown;
+  steps?: unknown;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+}
+
+export function listPlans(): Plan[] {
+  const stored = localStorage.getItem(PLANS_KEY);
+  const now = Date.now();
+  if (!stored) return [];
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(stored);
+  } catch {
+    return [];
+  }
+
+  const raw = Array.isArray(parsed) ? (parsed as StoredPlan[]) : [];
+  return raw.map((i) => normalizePlan(i, now));
+}
+
+function normalizePlan(plan: StoredPlan, now: number): Plan {
+  return {
+    id: String(plan.id ?? crypto.randomUUID()),
+    ventItemId: typeof plan.ventItemId === "string" ? plan.ventItemId : "",
+    title: String(plan.title ?? ""),
+    steps: Array.isArray(plan.steps) ? plan.steps : [],
+    createdAt: Number(plan.createdAt ?? now),
+    updatedAt: Number(plan.updatedAt ?? now),
+  };
+}
+
+export function savePlans(plans: Plan[]) {
+  const now = Date.now();
+  const normalized = plans.map((p) => normalizePlan(p, now));
+  localStorage.setItem(PLANS_KEY, JSON.stringify(normalized));
+}
+
+/* ----------------------------- PLAN STEP --------------------------------- */
+
 /* ============================================================================
  WRITE OPERATIONS
 ============================================================================ */
 
-export function createVentItem(title: string, when: string, stressLevel: number): CreateVentItemResult {
+/* ----------------------------- VENT ITEM --------------------------------- */
+
+export function createVentItem(title: string, when: When, stressLevel: number): CreateVentItemResult {
   const trimmedTitle = title.trim();
 
   if (!when) return { ok: false, error: `"When" field is required` };
@@ -158,7 +236,7 @@ export function editVentItem(id: string, patch: VentItemPatch) : EditVentItemRes
     const existing = ventItems.find((i) => i.id === id);
   
     if (!existing) {
-      return { ok: false, error: "Vent Item not found" };
+      return { ok: false, error: "Vent Item not found." };
     }
   
     const updated: VentItem = {
@@ -187,3 +265,72 @@ export function removeVentItem(id: string): RemoveVentItemResult {
 
   return { ok: true };
 } 
+
+/* ----------------------------- PLAN --------------------------------- */
+
+export function getPlanByVentItemId(ventItemId: string): Plan | null {
+  if (!ventItemId) return  null;
+  const plans = listPlans();
+  const matchedPlan = plans.find((p) => p.ventItemId === ventItemId);
+  return matchedPlan ?? null;
+}
+
+export function createPlanForVentItem(ventItemId: string, title: string): CreatePlanResult {
+  if ( getPlanByVentItemId(ventItemId) !== null ) {
+    return { ok: false, error: "Plan already exists for this Vent Item." };
+  }
+  const doesVentItemExists = listVentItems().some(v => v.id === ventItemId);
+  if (!doesVentItemExists) return { ok: false, error: "Vent Item does not exists." }
+
+  const trimmedTitle = title.trim();
+  if (!trimmedTitle) return { ok: false, error: `Invalid title.` };
+  // if (!ventItemId) return { ok: false, error: `Invalid Vent Item ID.` };
+
+  const newPlan: Plan = {
+    id: crypto.randomUUID(),
+    ventItemId: ventItemId,
+    title: trimmedTitle,
+    steps: [],
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  }
+
+  const plans = listPlans();
+  savePlans([newPlan, ...plans]);
+
+  return { ok: true, plan: newPlan };
+
+}
+
+
+export function editPlan(planId: string, patch: PlanPatch) : EditPlanResult {
+
+  if (!planId) return { ok: false, error: "Invalid Plan ID." };
+  // Validate patch (v1: only name)
+  if (patch.title !== undefined) {
+    const trimmedName = patch.title.trim();
+    if (!trimmedName) {
+      return { ok: false, error: "Plan title is required" };
+    }
+    patch = { ...patch, title: trimmedName };
+  }
+
+  const plans = listPlans();
+  const matchedPlan = plans.find((p) => p.id === planId);
+  if (!matchedPlan) return { ok: false, error: "Plan not found." };
+
+  const updated: Plan = {
+    ...matchedPlan,
+    ...patch,
+    updatedAt: Date.now(),
+  };
+
+  const nextPlans = plans.map((p) => 
+    p.id === planId ? updated : p
+  );
+
+  savePlans(nextPlans);
+
+  return { ok: true, plan: updated };
+
+}

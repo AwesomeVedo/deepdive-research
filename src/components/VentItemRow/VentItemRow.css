@@ -160,3 +160,17 @@ li.vent-item.editing label {
 .vent-item-editing-controls>button:last-child:hover {
     background-color: #ff0000;
 }
+
+.start-a-plan {
+    color: inherit;
+    padding: 2px 10px;
+    border: 1px solid;
+    background-color: inherit;
+    font-weight: lighter;
+    margin-right: 20px;
+}
+
+.start-a-plan:hover {
+    color: white;
+    background-color: var(--primary-color-1);
+}
