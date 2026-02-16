@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useVentItems } from "../../hooks/useVentItems";
 import { VentItemRow } from "../../components/VentItemRow/VentItemRow";
 import { FilterIcon, ShowIcon } from "../../components/icons/Icon";
+import { usePlans } from "../../hooks/usePlans";
 import "./braindump.css";
 
 type sortMode = "Smart" | "Stress" | "When" | "Newest" | "Oldest";
@@ -15,7 +16,10 @@ export function Braindump() {
     const [itemStress, setItemStress] = useState<number>(0);
     const [sortMode, setSortMode] = useState<sortMode>("Smart");
     const [showMode, setShowMode] = useState<showMode>("Open");
+    const [openVentItemId, setOpenVentItemId] = useState<string | null>(null);
 
+
+    const plans = usePlans();
 
     function whenRank(when?: string): number {
         switch (when) {
@@ -62,55 +66,40 @@ export function Braindump() {
         // "Resolved"
         return isResolved(item.resolution);
     });
+
     const copied = [...visibleVentItems];
     copied.sort((a, b) => {
         if (sortMode === "Newest") { return b.createdAt - a.createdAt; }
         if (sortMode === "Oldest") { return a.createdAt - b.createdAt; }
         if (sortMode === "Stress") {
-            // 3: stress (higher first)
             const s = b.stressLevel - a.stressLevel;
             if (s !== 0) return s;
-            // 4: tie-breaker (newer first)
             return b.createdAt - a.createdAt;
         }
         if (sortMode === "When") {
-            // 2: When (Today first) 
             const w = whenRank(a.when) - whenRank(b.when);
             if (w !== 0) return w;
-            // 3: stress (higher first)
             const s = b.stressLevel - a.stressLevel;
             if (s !== 0) return s;
-            // 4: tie-breaker (newer first)
             return b.createdAt - a.createdAt;
         }
 
-        // Smart (default)
-
-        // 1: Resolution (Open first)
         const r = resolutionRank(a.resolution) - resolutionRank(b.resolution);
         if (r !== 0) return r;
 
-        // 2: When (Today first) 
         const w = whenRank(a.when) - whenRank(b.when);
         if (w !== 0) return w;
 
-        // 3: stress (higher first)
         const s = b.stressLevel - a.stressLevel;
         if (s !== 0) return s;
 
-        // 4: tie-breaker (newer first)
         return b.createdAt - a.createdAt;
-
-
     });
 
     const sortedVentItems = copied;
 
     return (
         <div className="dash">
-            {/* <div className="dash__top">
-                <h2>Braindump</h2>
-            </div> */}
             <div className="dash__left">
                 <>
                     <h3>Add New Vent Item</h3>
@@ -139,6 +128,7 @@ export function Braindump() {
                                 onChange={(e) => setItemTitle(e.target.value)}
                             />
                         </label>
+
                         <label htmlFor="item-when"><span>When?</span>
                             <select
                                 name="item-when"
@@ -149,15 +139,14 @@ export function Braindump() {
                                     if (value === "Soon" || value === "Today" || value === "Later") {
                                         setItemWhen(value);
                                     }
-                                }
-                                }
-
+                                }}
                             >
                                 <option value="Today">Today</option>
                                 <option value="Soon">Soon</option>
                                 <option value="Later">Later</option>
                             </select>
                         </label>
+
                         <label htmlFor="item-stress"><span>Stress Level</span>
                             <select
                                 name="item-stress"
@@ -166,9 +155,7 @@ export function Braindump() {
                                 onChange={(e) => {
                                     const value = Number(e.target.value);
                                     if (value >= 0 && value <= 9) setItemStress(value);
-                                }
-                                }
-
+                                }}
                             >
                                 <option value={0}>0 – Calm</option>
                                 <option value={1}>1 – Light</option>
@@ -182,13 +169,12 @@ export function Braindump() {
                                 <option value={9}>9 – Mental Shutdown</option>
                             </select>
                         </label>
+
                         <button type="submit">Add</button>
                     </form>
-
                 </>
-
-
             </div>
+
             <div className="dash__right">
                 <div className="vent-filter--controls">
                     <ShowIcon />
@@ -201,14 +187,13 @@ export function Braindump() {
                             if (value === "Open" || value === "Resolved" || value === "All") {
                                 setShowMode(value);
                             }
-                        }
-                        }
-
+                        }}
                     >
                         <option value="All">All</option>
                         <option value="Open">Open</option>
                         <option value="Resolved">Resolved</option>
                     </select>
+
                     <FilterIcon />
                     <select
                         name="vent-filter--sort"
@@ -219,9 +204,7 @@ export function Braindump() {
                             if (value === "Smart" || value === "Stress" || value === "When" || value === "Newest" || value === "Oldest") {
                                 setSortMode(value);
                             }
-                        }
-                        }
-
+                        }}
                     >
                         <option value="Smart">Smart</option>
                         <option value="Stress">Stress</option>
@@ -230,19 +213,34 @@ export function Braindump() {
                         <option value="Oldest">Oldest</option>
                     </select>
                 </div>
+
                 <h3>Vents</h3>
+
                 <ul className="vent-list">
-                    {sortedVentItems.map((item) => (
-                        <VentItemRow
-                            key={item.id}
-                            item={item}
-                            onEdit={edit}
-                            onRemove={remove}
-                        />
-                    ))}
+                    {sortedVentItems.map((item) => {
+                        const plan = plans.getByVentItemId(item.id);
+
+                        return (
+                            <VentItemRow
+                                key={item.id}
+                                item={item}
+                                plan={plan}
+                                onCreatePlan={(ventItemId: string, title: string) => {
+                                    const res = plans.createForVentItem(ventItemId, title);
+                                    if (!res.ok) {
+                                        alert(res.error);
+                                        return;
+                                    }
+                                    // later: open plan UI
+                                }}
+                                onViewPlan={(ventItemId) => setOpenVentItemId(ventItemId)}
+                                onEdit={edit}
+                                onRemove={remove}
+                            />
+                        );
+                    })}
                 </ul>
             </div>
         </div>
-
     );
 }

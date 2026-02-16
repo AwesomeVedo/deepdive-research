@@ -1,40 +1,97 @@
+// ============================================================================
 // VentItemRow.tsx
+// ============================================================================
+
+// -----------------------------------------------------------------------------
+// Imports
+// -----------------------------------------------------------------------------
 import { useState, useRef, useEffect } from "react";
-import type { EditVentItemResult, RemoveVentItemResult, VentItem, VentItemPatch } from "../../services/braindump";
-import { CalendarIcon, StressIcon, MoreActionsIcon, DeleteIcon, EditIcon, DefferedIcon, OpenIcon, CompletedIcon, ReleasedIcon, CancelIcon, VentItemSaveIcon } from "../icons/Icon";
+import {
+    type EditVentItemResult,
+    type RemoveVentItemResult,
+    type VentItem,
+    type VentItemPatch,
+    type Plan,
+} from "../../services/braindump";
+
+import {
+    CalendarIcon,
+    StressIcon,
+    MoreActionsIcon,
+    DeleteIcon,
+    EditIcon,
+    DefferedIcon,
+    OpenIcon,
+    CompletedIcon,
+    ReleasedIcon,
+    CancelIcon,
+    VentItemSaveIcon,
+} from "../icons/Icon";
 
 import "./VentItemRow.css";
 
+
+// -----------------------------------------------------------------------------
+// Props
+// -----------------------------------------------------------------------------
 type VentItemRowProps = {
     item: VentItem;
-    onEdit: (id: string, patch: VentItemPatch) => Promise<EditVentItemResult>
-    onRemove: (id: string) => Promise<RemoveVentItemResult>
-}
+    plan: Plan | null;
+    onCreatePlan: (ventItemId: string, title: string) => void;
+    onViewPlan: (ventItemId: string) => void;
+    onEdit: (id: string, patch: VentItemPatch) => Promise<EditVentItemResult>;
+    onRemove: (id: string) => Promise<RemoveVentItemResult>;
+};
 
-export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
 
+// ============================================================================
+// Component
+// ============================================================================
+export function VentItemRow({ item, plan, onCreatePlan, onViewPlan, onEdit, onRemove }: VentItemRowProps) {
+
+    // ---------------------------------------------------------------------------
+    // Local State
+    // ---------------------------------------------------------------------------
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+
+    // Draft state (edit mode)
     const [draftTitle, setDraftTitle] = useState("");
     const [draftWhen, setDraftWhen] = useState<"Today" | "Soon" | "Later">("Soon");
-    const [draftResolution, setDraftResolution] = useState<"Open" | "Released" | "Completed" | "Deferred">("Open");
+    const [draftResolution, setDraftResolution] =
+        useState<"Open" | "Released" | "Completed" | "Deferred">("Open");
     const [draftStress, setDraftStress] = useState<number>(0);
+
+    // Refs
     const actionsRef = useRef<HTMLDivElement>(null);
 
+    // ---------------------------------------------------------------------------
+    // Derived Values
+    // ---------------------------------------------------------------------------
     const id = item.id;
     const title = item.title;
     const when = item.when;
     const stressLevel = item.stressLevel;
     const resolution = item.resolution;
+
+    const hasPlan = !!plan;
+
+    // Resolution icon mapping (view mode)
     const iconMap = {
         Open: <OpenIcon />,
         Released: <ReleasedIcon />,
         Completed: <CompletedIcon />,
-        Deferred: <DefferedIcon />
+        Deferred: <DefferedIcon />,
     } as const;
 
+    // Stress fill percentage for background "bar"
     const fillPercent = (stressLevel / 9) * 100;
 
+
+    // ---------------------------------------------------------------------------
+    // Effects
+    // ---------------------------------------------------------------------------
+    // Close the actions menu when clicking outside of the menu container
     useEffect(() => {
         if (!isMenuOpen) return;
 
@@ -51,8 +108,15 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
     }, [isMenuOpen]);
 
 
+    // ---------------------------------------------------------------------------
+    // Render
+    // ---------------------------------------------------------------------------
     return (
         !isEditing ? (
+
+            // =======================================================================
+            // View Mode
+            // =======================================================================
             <>
                 <li
                     className="vent-item"
@@ -63,38 +127,56 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                     <div className="vent-item-col-left">
                         <div className="vent-item-title">{title}</div>
                     </div>
-                    <div className="vent-item-col-right">
-                        <div className="vent-item-options">
-                            <button
-                                type="button"
-                                className="start-a-plan button"
-                                onClick={() => {
-                                    alert("worked");
-                                }}
-                            >Start a Plan
-                            </button>
-                            <span className="resolution-text vent-item-option">
 
+                    <div className="vent-item-col-right">
+
+                        {/* ---------------------------------------------------------------
+               Meta / Options Row
+            ---------------------------------------------------------------- */}
+                        <div className="vent-item-options">
+                            {!hasPlan ?
+                                (<button
+                                    type="button"
+                                    className="start-a-plan button"
+                                    onClick={() => onCreatePlan(id, title)}
+                                >
+                                    Start a Plan
+                                </button>)
+
+                                : (<button
+                                    type="button"
+                                    className="view-plan button"
+                                    onClick={() => onViewPlan(id)}
+                                >
+                                    View Plan
+                                </button>)
+
+                            }
+                            <span className="resolution-text vent-item-option">
                                 {iconMap[resolution]}
                                 <span>{resolution}</span>
                             </span>
+
                             <span className="when-text vent-item-option">
                                 <CalendarIcon />
                                 <span>{when}</span>
                             </span>
+
                             <span className="stress-level-text vent-item-option">
                                 <StressIcon />
                                 <span>Stress Lvl:</span>
                                 <span>{stressLevel}</span>
                             </span>
                         </div>
-                        <div ref={actionsRef} className="vent-item-actions">
-                            <MoreActionsIcon
-                                onClick={() => setIsMenuOpen((v) => !v)}
-                            />
 
-                            {
-                                isMenuOpen &&
+
+                        {/* ---------------------------------------------------------------
+               Actions (3-dot menu)
+            ---------------------------------------------------------------- */}
+                        <div ref={actionsRef} className="vent-item-actions">
+                            <MoreActionsIcon onClick={() => setIsMenuOpen((v) => !v)} />
+
+                            {isMenuOpen && (
                                 <div className="vent-item-menu">
 
                                     <button
@@ -111,6 +193,7 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                                     >
                                         <EditIcon /> Edit
                                     </button>
+
                                     <button
                                         type="button"
                                         className="delete"
@@ -124,17 +207,25 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                                     >
                                         <DeleteIcon /> Delete
                                     </button>
-                                </div>
-                            }
 
+                                </div>
+                            )}
                         </div>
+
                     </div>
                 </li>
             </>
+
         ) : (
+
+            // =======================================================================
+            // Edit Mode
+            // =======================================================================
             <>
                 <li className="vent-item editing">
                     <div className="vent-item-col-left">
+
+                        {/* Title input */}
                         <input
                             type="text"
                             className="vent-item-input"
@@ -143,7 +234,10 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                             onChange={(e) => setDraftTitle(e.target.value)}
                         />
                     </div>
+
                     <div className="vent-item-col-right">
+
+                        {/* Resolution select */}
                         <label htmlFor="draft-resolution">
                             <select
                                 name="draft-resolution"
@@ -151,12 +245,15 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                                 value={draftResolution}
                                 onChange={(e) => {
                                     const value = e.target.value;
-                                    if (value === "Completed" || value === "Released" || value === "Open" || value === "Deferred") {
+                                    if (
+                                        value === "Completed" ||
+                                        value === "Released" ||
+                                        value === "Open" ||
+                                        value === "Deferred"
+                                    ) {
                                         setDraftResolution(value);
                                     }
-                                }
-                                }
-
+                                }}
                             >
                                 <option value="Open">Open</option>
                                 <option value="Released">Released</option>
@@ -164,6 +261,8 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                                 <option value="Completed">Completed</option>
                             </select>
                         </label>
+
+                        {/* When select */}
                         <label htmlFor="draft-when">
                             <select
                                 name="draft-when"
@@ -174,15 +273,15 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                                     if (value === "Soon" || value === "Today" || value === "Later") {
                                         setDraftWhen(value);
                                     }
-                                }
-                                }
-
+                                }}
                             >
                                 <option value="Today">Today</option>
                                 <option value="Soon">Soon</option>
                                 <option value="Later">Later</option>
                             </select>
                         </label>
+
+                        {/* Stress select */}
                         <label htmlFor="draft-stress">
                             <select
                                 name="draft-stress"
@@ -191,9 +290,7 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                                 onChange={(e) => {
                                     const value = Number(e.target.value);
                                     if (value >= 0 && value <= 9) setDraftStress(value);
-                                }
-                                }
-
+                                }}
                             >
                                 <option value={0}>0 – Calm</option>
                                 <option value={1}>1 – Light</option>
@@ -205,21 +302,31 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                                 <option value={7}>7 – Distressed</option>
                                 <option value={8}>8 – Near Breakdown</option>
                                 <option value={9}>9 – Mental Shutdown</option>
-
                             </select>
                         </label>
+
+
+                        {/* -------------------------------------------------------------
+               Save / Cancel Controls
+            ------------------------------------------------------------- */}
                         <div className="vent-item-editing-controls">
+
                             <button
                                 type="button"
                                 className="icon-button"
                                 onClick={async () => {
-                                    const result = await onEdit(
-                                        id,
-                                        { title: draftTitle, when: draftWhen, stressLevel: draftStress, resolution: draftResolution });
+                                    const result = await onEdit(id, {
+                                        title: draftTitle,
+                                        when: draftWhen,
+                                        stressLevel: draftStress,
+                                        resolution: draftResolution,
+                                    });
+
                                     if (!result.ok) {
                                         alert(result.error);
                                         return;
                                     }
+
                                     setIsEditing(false);
                                     setDraftTitle("");
                                     setDraftWhen("Soon");
@@ -229,6 +336,7 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                             >
                                 <VentItemSaveIcon />
                             </button>
+
                             <button
                                 type="button"
                                 className="icon-button"
@@ -242,10 +350,10 @@ export function VentItemRow({ item, onEdit, onRemove }: VentItemRowProps) {
                             >
                                 <CancelIcon />
                             </button>
+
                         </div>
+
                     </div>
-
-
                 </li>
             </>
         )
