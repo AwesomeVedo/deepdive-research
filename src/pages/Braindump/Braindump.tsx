@@ -4,6 +4,9 @@ import { useVentItems } from "../../hooks/useVentItems";
 import { VentItemRow } from "../../components/VentItemRow/VentItemRow";
 import { FilterIcon, ShowIcon } from "../../components/icons/Icon";
 import { usePlans } from "../../hooks/usePlans";
+import { RightPanel } from "../../components/RightPanel/RightPanel";
+import { PlanPanel } from "../../components/PlanPanel/PlanPanel";
+
 import "./braindump.css";
 
 type sortMode = "Smart" | "Stress" | "When" | "Newest" | "Oldest";
@@ -18,8 +21,16 @@ export function Braindump() {
     const [showMode, setShowMode] = useState<showMode>("Open");
     const [openVentItemId, setOpenVentItemId] = useState<string | null>(null);
 
-
+    // Plan variables
     const plans = usePlans();
+    const selectedVentItem = openVentItemId
+        ? ventItems.find((v) => v.id === openVentItemId) ?? null
+        : null;
+
+    const selectedPlan = openVentItemId
+        ? plans.getByVentItemId(openVentItemId)
+        : null;
+
 
     function whenRank(when?: string): number {
         switch (when) {
@@ -175,7 +186,7 @@ export function Braindump() {
                 </>
             </div>
 
-            <div className="dash__right">
+            <div className="dash__panel">
                 <div className="vent-filter--controls">
                     <ShowIcon />
                     <select
@@ -225,22 +236,56 @@ export function Braindump() {
                                 key={item.id}
                                 item={item}
                                 plan={plan}
+                                isPlanOpen={openVentItemId === item.id}
+                                isSelected={openVentItemId === item.id}
+                                onSelect={(ventItemId) => setOpenVentItemId(ventItemId)}
                                 onCreatePlan={(ventItemId: string, title: string) => {
-                                    const res = plans.createForVentItem(ventItemId, title);
-                                    if (!res.ok) {
-                                        alert(res.error);
+                                    const result = plans.createForVentItem(ventItemId, title);
+                                    if (!result.ok) {
+                                        alert(result.error);
                                         return;
                                     }
-                                    // later: open plan UI
+                                    // focus the right panel after create
+                                    setOpenVentItemId(ventItemId);
                                 }}
                                 onViewPlan={(ventItemId) => setOpenVentItemId(ventItemId)}
                                 onEdit={edit}
                                 onRemove={remove}
                             />
+
                         );
                     })}
                 </ul>
             </div>
+            <div className="dash__right">
+                <RightPanel
+                    title="Plan"
+                    subtitle={selectedVentItem ? selectedVentItem.title : undefined}
+                >
+                    <PlanPanel
+                        ventItem={selectedVentItem}
+                        plan={selectedPlan}
+                        onCreatePlan={(ventItemId, title) => {
+                            const res = plans.createForVentItem(ventItemId, title);
+                            if (!res.ok) {
+                                alert(res.error);
+                                return;
+                            }
+                            setOpenVentItemId(ventItemId);
+                        }}
+                        onAddStep={(planId, title) => plans.addStep(planId, title)}
+                        onToggleStep={(planId, stepId) => {
+                            const res = plans.toggleStepCompleted(planId, stepId);
+                            if (!res.ok) alert(res.error);
+                        }}
+                        onEditStep={(planId, stepId, title) => plans.editStep(planId, stepId, { title })}
+                        onRemoveStep={(planId, stepId) => plans.removeStep(planId, stepId)}
+                        onReorderSteps={(planId, orderedStepIds) => plans.reorderSteps(planId, orderedStepIds)}
+                    />
+
+                </RightPanel>
+            </div>
+
         </div>
     );
 }

@@ -46,7 +46,7 @@ export function Dashboard() {
                         </div>
                     </form>
                 </section>
-                <section className="dash__right">
+                <section className="dash__panel">
                     <h2>Focus Areas</h2>
                     {!hasProjects ? (
                         <p>Nothing to show yet...</p>

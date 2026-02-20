@@ -392,7 +392,160 @@ export function editPlan(planId: string, patch: PlanPatch) : EditPlanResult {
   savePlans(nextPlans);
 
   return { ok: true, plan: updated };
-  
+
 }
 
 /* --------------- PLAN STEP --------------- */
+
+export function addPlanStep(planId: string, title: string): CreatePlanStepResult {
+  const trimmed = title.trim();
+  if (!planId) return { ok: false, error: "Invalid Plan ID." };
+  if (!trimmed) return { ok: false, error: "Step title is required." };
+
+  const plans = listPlans();
+  const existing = plans.find((p) => p.id === planId);
+  if (!existing) return { ok: false, error: "Plan not found." };
+
+  const newStep: PlanStep = {
+    id: crypto.randomUUID(),
+    title: trimmed,
+    completed: false,
+  };
+
+  const updated: Plan = {
+    ...existing,
+    steps: [...existing.steps, newStep],
+    updatedAt: Date.now(),
+  };
+
+  const nextPlans = plans.map((p) => (p.id === planId ? updated : p));
+  savePlans(nextPlans);
+
+  return { ok: true, plan: updated };
+}
+
+export function togglePlanStepCompleted(planId: string, stepId: string): EditPlanStepResult {
+  if (!planId) return { ok: false, error: "Invalid Plan ID." };
+  if (!stepId) return { ok: false, error: "Invalid Step ID." };
+
+  const plans = listPlans();
+  const existing = plans.find((p) => p.id === planId);
+  if (!existing) return { ok: false, error: "Plan not found." };
+
+  const idx = existing.steps.findIndex((s) => s.id === stepId);
+  if (idx === -1) return { ok: false, error: "Step not found." };
+
+  const target = existing.steps[idx];
+  const updatedStep: PlanStep = {
+    ...target,
+    completed: !target.completed,
+  };
+
+  const nextSteps = existing.steps.map((s) => (s.id === stepId ? updatedStep : s));
+
+  const updated: Plan = {
+    ...existing,
+    steps: nextSteps,
+    updatedAt: Date.now(),
+  };
+
+  const nextPlans = plans.map((p) => (p.id === planId ? updated : p));
+  savePlans(nextPlans);
+
+  return { ok: true, plan: updated };
+}
+
+export function editPlanStep(
+  planId: string,
+  stepId: string,
+  patch: PlanStepPatch
+): EditPlanStepResult {
+  if (!planId) return { ok: false, error: "Invalid Plan ID." };
+  if (!stepId) return { ok: false, error: "Invalid Step ID." };
+
+  // Validate patch
+  if (patch.title !== undefined) {
+    const trimmed = patch.title.trim();
+    if (!trimmed) return { ok: false, error: "Step title is required." };
+    patch = { ...patch, title: trimmed };
+  }
+
+  const plans = listPlans();
+  const existing = plans.find((p) => p.id === planId);
+  if (!existing) return { ok: false, error: "Plan not found." };
+
+  const stepExists = existing.steps.some((s) => s.id === stepId);
+  if (!stepExists) return { ok: false, error: "Step not found." };
+
+  const nextSteps = existing.steps.map((s) =>
+    s.id === stepId ? { ...s, ...patch } : s
+  );
+
+  const updated: Plan = {
+    ...existing,
+    steps: nextSteps,
+    updatedAt: Date.now(),
+  };
+
+  const nextPlans = plans.map((p) => (p.id === planId ? updated : p));
+  savePlans(nextPlans);
+
+  return { ok: true, plan: updated };
+}
+
+export function removePlanStep(planId: string, stepId: string): RemovePlanStepResult {
+  if (!planId) return { ok: false, error: "Invalid Plan ID." };
+  if (!stepId) return { ok: false, error: "Invalid Step ID." };
+
+  const plans = listPlans();
+  const existing = plans.find((p) => p.id === planId);
+  if (!existing) return { ok: false, error: "Plan not found." };
+
+  const stepExists = existing.steps.some((s) => s.id === stepId);
+  if (!stepExists) return { ok: false, error: "Step not found." };
+
+  const updated: Plan = {
+    ...existing,
+    steps: existing.steps.filter((s) => s.id !== stepId),
+    updatedAt: Date.now(),
+  };
+
+  const nextPlans = plans.map((p) => (p.id === planId ? updated : p));
+  savePlans(nextPlans);
+
+  return { ok: true };
+}
+
+export function reorderPlanSteps(planId: string, orderedStepIds: string[]): EditPlanStepResult {
+  if (!planId) return { ok: false, error: "Invalid Plan ID." };
+  if (!Array.isArray(orderedStepIds) || orderedStepIds.length === 0) {
+    return { ok: false, error: "Invalid step order." };
+  }
+
+  const plans = listPlans();
+  const plan = plans.find((p) => p.id === planId);
+  if (!plan) return { ok: false, error: "Plan not found." };
+
+  // Build lookup from existing steps
+  const byId = new Map(plan.steps.map((s) => [s.id, s]));
+
+  // Validate: all ids exist
+  for (const id of orderedStepIds) {
+    if (!byId.has(id)) return { ok: false, error: "Invalid step id in order." };
+  }
+
+  // Rebuild steps in the new order (preserve step objects)
+  const nextSteps = orderedStepIds.map((id) => byId.get(id)!);
+
+  const updated: Plan = {
+    ...plan,
+    steps: nextSteps,
+    updatedAt: Date.now(),
+  };
+
+  const nextPlans = plans.map((p) => (p.id === planId ? updated : p));
+  savePlans(nextPlans);
+
+  // Reuse existing result type to return plan
+  return { ok: true, plan: updated };
+}

@@ -1,0 +1,149 @@
+/* src/components/PlanPanel/PlanPanel.css */
+
+.plan-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    /* Force readable text (in case parent panel styles are dark) */
+    color: #222;
+}
+
+.plan-panel__section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.plan-panel__label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.65;
+}
+
+.plan-panel__value {
+    font-size: 14px;
+}
+
+.plan-panel__muted {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.6;
+}
+
+.plan-panel__empty {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.plan-panel__cta {
+    align-self: flex-start;
+}
+
+/* -------------------- Steps list -------------------- */
+
+.plan-panel__steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.plan-panel__step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    /* Drag affordance */
+    cursor: grab;
+}
+
+.plan-panel__step:active {
+    cursor: grabbing;
+}
+
+.plan-panel__step[draggable="true"] {
+    user-select: none;
+}
+
+.plan-panel__step:hover {
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 6px;
+
+    /* Creates a hover “pill” without shifting layout */
+    padding: 6px;
+    margin: -6px;
+}
+
+.plan-panel__step input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/* Default step text (click to edit) */
+.plan-panel__step-title {
+    flex: 1;
+
+    background: transparent;
+    border: 0;
+    padding: 0;
+    text-align: left;
+
+    cursor: pointer;
+    color: #222;
+    font-size: 14px;
+}
+
+/* Completed step styling */
+.plan-panel__step.completed .plan-panel__step-title,
+.plan-panel__step.completed span {
+    text-decoration: line-through;
+    opacity: 0.55;
+}
+
+/* Inline edit input */
+.plan-panel__step-edit {
+    flex: 1;
+}
+
+/* Delete button */
+.plan-panel__step-delete {
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+
+    font-size: 18px;
+    line-height: 1;
+
+    opacity: 0.6;
+    color: #888;
+}
+
+.plan-panel__step-delete:hover {
+    opacity: 1;
+    color: #000;
+}
+
+/* -------------------- Add step (Trello-style) -------------------- */
+
+.plan-panel__add-link {
+    margin-top: 10px;
+}
+
+.plan-panel__add {
+    margin-top: 10px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.plan-panel__add-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start;
+}

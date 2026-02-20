@@ -1,0 +1,27 @@
+/* src/components/RightPanel/RightPanel.css */
+.right-panel {
+    height: 100%;
+    /* padding: 16px; */
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.right-panel__header {
+    margin-bottom: 12px;
+}
+
+.right-panel__title {
+    /* margin: 0;
+    font-size: 18px; */
+}
+
+.right-panel__subtitle {
+    margin-top: 6px;
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+.right-panel__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
