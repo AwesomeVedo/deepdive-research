@@ -14,7 +14,7 @@ export function Nav() {
     const location = useLocation();
 
     const from =
-        (location.state as LocationState)?.from?.pathname || "/dashboard";
+        (location.state as LocationState)?.from?.pathname || "/braindump";
 
     return (
         <nav style={{ display: "flex", gap: 32, padding: 0, alignItems: "center" }}>
@@ -22,7 +22,7 @@ export function Nav() {
             {loggedIn ? (
                 <>
                     <NavLink to="/braindump">Braindump</NavLink>
-                    <NavLink to="/dashboard">Dashboard</NavLink>
+                    {/* <NavLink to="/dashboard">Dashboard</NavLink> */}
                     <button
                         type="button"
                         className="logout-button"

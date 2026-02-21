@@ -23,6 +23,11 @@
     transition: background-color 120ms ease, border-color 120ms ease;
 }
 
+.vent-item:not(.is-selected),
+.vent-item:not(.is-selected) .vent-item-title {
+    cursor: pointer;
+}
+
 .vent-item:nth-child(even) {
     background-color: #fefefe;
 }
@@ -126,7 +131,8 @@
    Focused / Selected State
    =============================== */
 
-.vent-item.is-selected {
+.vent-item.is-selected,
+.vent-item:hover {
     background-color: #ffffff;
     border-color: rgba(0, 0, 0, 0.18);
 }
@@ -178,11 +184,11 @@
     white-space: nowrap;
 }
 
-.vent-item-inline-button:hover {
+.vent-item.is-selected .vent-item-inline-button:hover {
     background: rgba(0, 0, 0, 0.04);
 }
 
-.vent-item-inline-button:focus-visible {
+.vent-item.is-selected .vent-item-inline-button:focus-visible {
     outline: 2px solid rgba(0, 0, 0, 0.25);
     outline-offset: 2px;
 }
@@ -214,7 +220,7 @@
     max-width: 100%;
 }
 
-.vent-item-inline-pill:hover {
+.vent-item.is-selected .vent-item-inline-pill:hover {
     background: rgba(0, 0, 0, 0.04);
 }
 

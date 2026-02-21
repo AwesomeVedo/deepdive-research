@@ -1,5 +1,6 @@
 // VentItemRow.tsx
 import { useState, useRef, useEffect } from "react";
+import type React from "react";
 import type {
     EditVentItemResult,
     RemoveVentItemResult,
@@ -26,6 +27,7 @@ type VentItemRowProps = {
     isSelected: boolean;
     onSelect: (ventItemId: string) => void;
 
+    // kept in props for compatibility with parent; buttons removed from UI
     onCreatePlan: (ventItemId: string, title: string) => void;
     onViewPlan: (ventItemId: string) => void;
 
@@ -39,11 +41,8 @@ type EditableField = "title" | "when" | "resolution" | "stress";
 
 export function VentItemRow({
     item,
-    plan,
     isSelected,
     onSelect,
-    onCreatePlan,
-    onViewPlan,
     onEdit,
     onRemove,
 }: VentItemRowProps) {
@@ -51,7 +50,6 @@ export function VentItemRow({
     const [activeField, setActiveField] = useState<EditableField | null>(null);
 
     const { id, title, when, stressLevel, resolution } = item;
-    const hasPlan = !!plan;
 
     // Drafts (seed from item once; refresh again when beginEdit is called)
     const [draftTitle, setDraftTitle] = useState(() => title);
@@ -72,8 +70,22 @@ export function VentItemRow({
 
     const fillPercent = (stressLevel / 9) * 100;
 
-    // Helper: ensures any interaction also focuses/selects this row
-    function focusRow(e: React.MouseEvent) {
+    /**
+     * Two-phase interaction model:
+     * - If NOT selected: first click only selects/focuses row (opens PlanPanel).
+     * - If selected: subsequent clicks are allowed to trigger edits/menus/etc.
+     */
+    function gateInteraction(e: React.MouseEvent): boolean {
+        if (isSelected) return true;
+
+        e.preventDefault();
+        e.stopPropagation();
+        onSelect(id);
+        return false;
+    }
+
+    // For inputs/selects while editing: keep selection, prevent row click interference.
+    function focusRowStop(e: React.MouseEvent) {
         e.stopPropagation();
         onSelect(id);
     }
@@ -92,6 +104,20 @@ export function VentItemRow({
         return () => document.removeEventListener("mousedown", onDocMouseDown);
     }, [isMenuOpen]);
 
+    // If this row loses selection, close transient UI.
+    useEffect(() => {
+        if (isSelected) return;
+
+        setIsMenuOpen(false);
+        setActiveField(null);
+
+        // restore drafts to source of truth
+        setDraftTitle(title);
+        setDraftWhen(when);
+        setDraftResolution(resolution);
+        setDraftStress(stressLevel);
+    }, [isSelected, title, when, resolution, stressLevel]);
+
     function beginEdit(field: EditableField) {
         setActiveField(field);
 
@@ -107,7 +133,6 @@ export function VentItemRow({
     function cancelEdit() {
         setActiveField(null);
 
-        // Restore drafts back to source of truth
         setDraftTitle(title);
         setDraftWhen(when);
         setDraftResolution(resolution);
@@ -171,13 +196,13 @@ export function VentItemRow({
             style={{ "--fill": `${fillPercent}%` } as React.CSSProperties}
         >
             <div className="vent-item-col-left">
-                {/* Title: inline edit + ALSO focuses row */}
+                {/* Title: gated inline edit */}
                 {activeField !== "title" ? (
                     <button
                         type="button"
                         className="vent-item-title vent-item-inline-button"
                         onClick={(e) => {
-                            focusRow(e);
+                            if (!gateInteraction(e)) return;
                             beginEdit("title");
                         }}
                     >
@@ -189,7 +214,7 @@ export function VentItemRow({
                         className="vent-item-title vent-item-inline-input input"
                         value={draftTitle}
                         autoFocus
-                        onClick={(e) => focusRow(e)}
+                        onClick={focusRowStop}
                         onChange={(e) => setDraftTitle(e.target.value)}
                         onKeyDown={(e) => {
                             if (e.key === "Escape") cancelEdit();
@@ -205,38 +230,14 @@ export function VentItemRow({
 
             <div className="vent-item-col-right">
                 <div className="vent-item-options">
-                    {/* {!hasPlan ? (
-                        <button
-                            type="button"
-                            className="start-a-plan plan-button button"
-                            onClick={(e) => {
-                                focusRow(e);
-                                onCreatePlan(id, title);
-                            }}
-                        >
-                            Start a Plan
-                        </button>
-                    ) : (
-                        <button
-                            type="button"
-                            className="view-plan plan-button button"
-                            onClick={(e) => {
-                                focusRow(e);
-                                onViewPlan(id);
-                            }}
-                        >
-                            View Plan
-                        </button>
-                    )} */}
-
-                    {/* Resolution */}
+                    {/* Resolution: gated */}
                     <span className="resolution-text vent-item-option">
                         {activeField !== "resolution" ? (
                             <button
                                 type="button"
                                 className="vent-item-inline-pill"
                                 onClick={(e) => {
-                                    focusRow(e);
+                                    if (!gateInteraction(e)) return;
                                     beginEdit("resolution");
                                 }}
                             >
@@ -248,7 +249,7 @@ export function VentItemRow({
                                 className="vent-item-inline-select input"
                                 value={draftResolution}
                                 autoFocus
-                                onClick={(e) => focusRow(e)}
+                                onClick={focusRowStop}
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     if (
@@ -277,14 +278,14 @@ export function VentItemRow({
                         )}
                     </span>
 
-                    {/* When */}
+                    {/* When: gated */}
                     <span className="when-text vent-item-option">
                         {activeField !== "when" ? (
                             <button
                                 type="button"
                                 className="vent-item-inline-pill"
                                 onClick={(e) => {
-                                    focusRow(e);
+                                    if (!gateInteraction(e)) return;
                                     beginEdit("when");
                                 }}
                             >
@@ -296,7 +297,7 @@ export function VentItemRow({
                                 className="vent-item-inline-select input"
                                 value={draftWhen}
                                 autoFocus
-                                onClick={(e) => focusRow(e)}
+                                onClick={focusRowStop}
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     if (value === "Soon" || value === "Today" || value === "Later") {
@@ -319,14 +320,14 @@ export function VentItemRow({
                         )}
                     </span>
 
-                    {/* Stress */}
+                    {/* Stress: gated */}
                     <span className="stress-level-text vent-item-option">
                         {activeField !== "stress" ? (
                             <button
                                 type="button"
                                 className="vent-item-inline-pill"
                                 onClick={(e) => {
-                                    focusRow(e);
+                                    if (!gateInteraction(e)) return;
                                     beginEdit("stress");
                                 }}
                             >
@@ -339,7 +340,7 @@ export function VentItemRow({
                                 className="vent-item-inline-select input"
                                 value={draftStress}
                                 autoFocus
-                                onClick={(e) => focusRow(e)}
+                                onClick={focusRowStop}
                                 onChange={(e) => {
                                     const value = Number(e.target.value);
                                     if (value >= 0 && value <= 9) setDraftStress(value);
@@ -368,17 +369,13 @@ export function VentItemRow({
                     </span>
                 </div>
 
-                {/* Actions menu */}
-                <div
-                    ref={actionsRef}
-                    className="vent-item-actions"
-                    onClick={(e) => focusRow(e)}
-                >
+                {/* Actions menu: gated */}
+                <div ref={actionsRef} className="vent-item-actions">
                     <button
                         type="button"
                         className="icon-button"
                         onClick={(e) => {
-                            focusRow(e);
+                            if (!gateInteraction(e)) return;
                             setIsMenuOpen((v) => !v);
                         }}
                     >
@@ -386,12 +383,21 @@ export function VentItemRow({
                     </button>
 
                     {isMenuOpen && (
-                        <div className="vent-item-menu">
+                        <div
+                            className="vent-item-menu"
+                            onClick={(e) => {
+                                // keep menu clicks from selecting the row again / closing unexpectedly
+                                e.stopPropagation();
+                            }}
+                        >
                             <button
                                 type="button"
                                 className="delete"
                                 onClick={async (e) => {
-                                    focusRow(e);
+                                    // even when selected, avoid row click competing with delete/menu
+                                    e.stopPropagation();
+                                    onSelect(id);
+
                                     const result = await onRemove(id);
                                     if (!result.ok) alert(result.error);
                                 }}
