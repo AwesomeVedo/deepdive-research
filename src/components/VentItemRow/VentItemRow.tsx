@@ -12,7 +12,6 @@ import {
     StressIcon,
     MoreActionsIcon,
     DeleteIcon,
-    // EditIcon,
     DefferedIcon,
     OpenIcon,
     CompletedIcon,
@@ -73,6 +72,12 @@ export function VentItemRow({
 
     const fillPercent = (stressLevel / 9) * 100;
 
+    // Helper: ensures any interaction also focuses/selects this row
+    function focusRow(e: React.MouseEvent) {
+        e.stopPropagation();
+        onSelect(id);
+    }
+
     // Close menu on outside click
     useEffect(() => {
         if (!isMenuOpen) return;
@@ -90,7 +95,7 @@ export function VentItemRow({
     function beginEdit(field: EditableField) {
         setActiveField(field);
 
-        // Seed drafts from latest item values (prevents stale drafts without useEffect sync)
+        // Seed drafts from latest item values
         setDraftTitle(title);
         setDraftWhen(when);
         setDraftResolution(resolution);
@@ -110,14 +115,12 @@ export function VentItemRow({
     }
 
     async function commitEdit(field: EditableField) {
-        // Compute minimal patch (only if changed)
         let patch: VentItemPatch = {};
 
         if (field === "title") {
             const next = draftTitle.trim();
             const prev = title.trim();
 
-            // Treat empty or unchanged as "no-op" (just exit edit)
             if (!next || next === prev) {
                 setActiveField(null);
                 setDraftTitle(title);
@@ -168,13 +171,13 @@ export function VentItemRow({
             style={{ "--fill": `${fillPercent}%` } as React.CSSProperties}
         >
             <div className="vent-item-col-left">
-                {/* Title: Trello-style */}
+                {/* Title: inline edit + ALSO focuses row */}
                 {activeField !== "title" ? (
                     <button
                         type="button"
                         className="vent-item-title vent-item-inline-button"
                         onClick={(e) => {
-                            e.stopPropagation();
+                            focusRow(e);
                             beginEdit("title");
                         }}
                     >
@@ -186,7 +189,7 @@ export function VentItemRow({
                         className="vent-item-title vent-item-inline-input input"
                         value={draftTitle}
                         autoFocus
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => focusRow(e)}
                         onChange={(e) => setDraftTitle(e.target.value)}
                         onKeyDown={(e) => {
                             if (e.key === "Escape") cancelEdit();
@@ -202,12 +205,12 @@ export function VentItemRow({
 
             <div className="vent-item-col-right">
                 <div className="vent-item-options">
-                    {!hasPlan ? (
+                    {/* {!hasPlan ? (
                         <button
                             type="button"
                             className="start-a-plan plan-button button"
                             onClick={(e) => {
-                                e.stopPropagation();
+                                focusRow(e);
                                 onCreatePlan(id, title);
                             }}
                         >
@@ -218,22 +221,22 @@ export function VentItemRow({
                             type="button"
                             className="view-plan plan-button button"
                             onClick={(e) => {
-                                e.stopPropagation();
+                                focusRow(e);
                                 onViewPlan(id);
                             }}
                         >
                             View Plan
                         </button>
-                    )}
+                    )} */}
 
-                    {/* Resolution: click-to-edit select */}
+                    {/* Resolution */}
                     <span className="resolution-text vent-item-option">
                         {activeField !== "resolution" ? (
                             <button
                                 type="button"
                                 className="vent-item-inline-pill"
                                 onClick={(e) => {
-                                    e.stopPropagation();
+                                    focusRow(e);
                                     beginEdit("resolution");
                                 }}
                             >
@@ -245,7 +248,7 @@ export function VentItemRow({
                                 className="vent-item-inline-select input"
                                 value={draftResolution}
                                 autoFocus
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e) => focusRow(e)}
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     if (
@@ -274,14 +277,14 @@ export function VentItemRow({
                         )}
                     </span>
 
-                    {/* When: click-to-edit select */}
+                    {/* When */}
                     <span className="when-text vent-item-option">
                         {activeField !== "when" ? (
                             <button
                                 type="button"
                                 className="vent-item-inline-pill"
                                 onClick={(e) => {
-                                    e.stopPropagation();
+                                    focusRow(e);
                                     beginEdit("when");
                                 }}
                             >
@@ -293,7 +296,7 @@ export function VentItemRow({
                                 className="vent-item-inline-select input"
                                 value={draftWhen}
                                 autoFocus
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e) => focusRow(e)}
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     if (value === "Soon" || value === "Today" || value === "Later") {
@@ -316,14 +319,14 @@ export function VentItemRow({
                         )}
                     </span>
 
-                    {/* Stress: click-to-edit select */}
+                    {/* Stress */}
                     <span className="stress-level-text vent-item-option">
                         {activeField !== "stress" ? (
                             <button
                                 type="button"
                                 className="vent-item-inline-pill"
                                 onClick={(e) => {
-                                    e.stopPropagation();
+                                    focusRow(e);
                                     beginEdit("stress");
                                 }}
                             >
@@ -336,7 +339,7 @@ export function VentItemRow({
                                 className="vent-item-inline-select input"
                                 value={draftStress}
                                 autoFocus
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e) => focusRow(e)}
                                 onChange={(e) => {
                                     const value = Number(e.target.value);
                                     if (value >= 0 && value <= 9) setDraftStress(value);
@@ -369,13 +372,13 @@ export function VentItemRow({
                 <div
                     ref={actionsRef}
                     className="vent-item-actions"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => focusRow(e)}
                 >
                     <button
                         type="button"
                         className="icon-button"
                         onClick={(e) => {
-                            e.stopPropagation();
+                            focusRow(e);
                             setIsMenuOpen((v) => !v);
                         }}
                     >
@@ -384,22 +387,11 @@ export function VentItemRow({
 
                     {isMenuOpen && (
                         <div className="vent-item-menu">
-                            {/* <button
-                                type="button"
-                                className="edit"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    beginEdit("title"); // Trello-style: edit focuses title
-                                }}
-                            >
-                                <EditIcon /> Edit
-                            </button> */}
-
                             <button
                                 type="button"
                                 className="delete"
                                 onClick={async (e) => {
-                                    e.stopPropagation();
+                                    focusRow(e);
                                     const result = await onRemove(id);
                                     if (!result.ok) alert(result.error);
                                 }}

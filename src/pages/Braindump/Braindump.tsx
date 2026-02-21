@@ -9,29 +9,39 @@ import { PlanPanel } from "../../components/PlanPanel/PlanPanel";
 
 import "./braindump.css";
 
-type sortMode = "Smart" | "Stress" | "When" | "Newest" | "Oldest";
-type showMode = "Open" | "Resolved" | "All";
+type SortMode = "Smart" | "Stress" | "When" | "Newest" | "Oldest";
+type ShowMode = "Open" | "Resolved" | "All";
 
 export function Braindump() {
     const { ventItems, create, edit, remove } = useVentItems();
+
+    // Create Vent Item form state
     const [itemTitle, setItemTitle] = useState("");
     const [itemWhen, setItemWhen] = useState<"Today" | "Soon" | "Later">("Soon");
     const [itemStress, setItemStress] = useState<number>(0);
-    const [sortMode, setSortMode] = useState<sortMode>("Smart");
-    const [showMode, setShowMode] = useState<showMode>("Open");
-    const [openVentItemId, setOpenVentItemId] = useState<string | null>(null);
 
-    // Plan variables
+    // Filters / sorting
+    const [sortMode, setSortMode] = useState<SortMode>("Smart");
+    const [showMode, setShowMode] = useState<ShowMode>("Open");
+
+    // ✅ Selection drives the PlanPanel (even if plan is null)
+    const [selectedVentItemId, setSelectedVentItemId] = useState<string | null>(null);
+
+    // Plans API
     const plans = usePlans();
-    const selectedVentItem = openVentItemId
-        ? ventItems.find((v) => v.id === openVentItemId) ?? null
+
+    // ---------------------------------------------------------------------------
+    // Derived: selected vent item + selected plan (plan may be null)
+    // ---------------------------------------------------------------------------
+    const selectedVentItem = selectedVentItemId
+        ? ventItems.find((v) => v.id === selectedVentItemId) ?? null
         : null;
 
-    const selectedPlan = openVentItemId
-        ? plans.getByVentItemId(openVentItemId)
-        : null;
+    const selectedPlan = selectedVentItemId ? plans.getByVentItemId(selectedVentItemId) : null;
 
-
+    // ---------------------------------------------------------------------------
+    // Sorting helpers
+    // ---------------------------------------------------------------------------
     function whenRank(when?: string): number {
         switch (when) {
             case "Today":
@@ -71,6 +81,9 @@ export function Braindump() {
         }
     }
 
+    // ---------------------------------------------------------------------------
+    // Visible items
+    // ---------------------------------------------------------------------------
     const visibleVentItems = ventItems.filter((item) => {
         if (showMode === "All") return true;
         if (showMode === "Open") return !isResolved(item.resolution);
@@ -78,23 +91,31 @@ export function Braindump() {
         return isResolved(item.resolution);
     });
 
+    // ---------------------------------------------------------------------------
+    // Sorted items
+    // ---------------------------------------------------------------------------
     const copied = [...visibleVentItems];
     copied.sort((a, b) => {
-        if (sortMode === "Newest") { return b.createdAt - a.createdAt; }
-        if (sortMode === "Oldest") { return a.createdAt - b.createdAt; }
+        if (sortMode === "Newest") return b.createdAt - a.createdAt;
+        if (sortMode === "Oldest") return a.createdAt - b.createdAt;
+
         if (sortMode === "Stress") {
             const s = b.stressLevel - a.stressLevel;
             if (s !== 0) return s;
             return b.createdAt - a.createdAt;
         }
+
         if (sortMode === "When") {
             const w = whenRank(a.when) - whenRank(b.when);
             if (w !== 0) return w;
+
             const s = b.stressLevel - a.stressLevel;
             if (s !== 0) return s;
+
             return b.createdAt - a.createdAt;
         }
 
+        // Smart
         const r = resolutionRank(a.resolution) - resolutionRank(b.resolution);
         if (r !== 0) return r;
 
@@ -109,6 +130,9 @@ export function Braindump() {
 
     const sortedVentItems = copied;
 
+    // ---------------------------------------------------------------------------
+    // Render
+    // ---------------------------------------------------------------------------
     return (
         <div className="dash">
             <div className="dash__left">
@@ -140,7 +164,8 @@ export function Braindump() {
                             />
                         </label>
 
-                        <label htmlFor="item-when"><span>When?</span>
+                        <label htmlFor="item-when">
+                            <span>When?</span>
                             <select
                                 name="item-when"
                                 className="input"
@@ -158,7 +183,8 @@ export function Braindump() {
                             </select>
                         </label>
 
-                        <label htmlFor="item-stress"><span>Stress Level</span>
+                        <label htmlFor="item-stress">
+                            <span>Stress Level</span>
                             <select
                                 name="item-stress"
                                 className="input"
@@ -212,7 +238,13 @@ export function Braindump() {
                         value={sortMode}
                         onChange={(e) => {
                             const value = e.target.value;
-                            if (value === "Smart" || value === "Stress" || value === "When" || value === "Newest" || value === "Oldest") {
+                            if (
+                                value === "Smart" ||
+                                value === "Stress" ||
+                                value === "When" ||
+                                value === "Newest" ||
+                                value === "Oldest"
+                            ) {
                                 setSortMode(value);
                             }
                         }}
@@ -236,32 +268,28 @@ export function Braindump() {
                                 key={item.id}
                                 item={item}
                                 plan={plan}
-                                isPlanOpen={openVentItemId === item.id}
-                                isSelected={openVentItemId === item.id}
-                                onSelect={(ventItemId) => setOpenVentItemId(ventItemId)}
+                                isPlanOpen={selectedVentItemId === item.id}
+                                isSelected={selectedVentItemId === item.id}
+                                onSelect={(ventItemId) => setSelectedVentItemId(ventItemId)}
                                 onCreatePlan={(ventItemId: string, title: string) => {
                                     const result = plans.createForVentItem(ventItemId, title);
                                     if (!result.ok) {
                                         alert(result.error);
                                         return;
                                     }
-                                    // focus the right panel after create
-                                    setOpenVentItemId(ventItemId);
+                                    setSelectedVentItemId(ventItemId);
                                 }}
-                                onViewPlan={(ventItemId) => setOpenVentItemId(ventItemId)}
+                                onViewPlan={(ventItemId) => setSelectedVentItemId(ventItemId)}
                                 onEdit={edit}
                                 onRemove={remove}
                             />
-
                         );
                     })}
                 </ul>
             </div>
+
             <div className="dash__right">
-                <RightPanel
-                    title="Plan"
-                    subtitle={selectedVentItem ? selectedVentItem.title : undefined}
-                >
+                <RightPanel title="Plan" subtitle={selectedVentItem ? selectedVentItem.title : undefined}>
                     <PlanPanel
                         ventItem={selectedVentItem}
                         plan={selectedPlan}
@@ -271,7 +299,7 @@ export function Braindump() {
                                 alert(res.error);
                                 return;
                             }
-                            setOpenVentItemId(ventItemId);
+                            setSelectedVentItemId(ventItemId);
                         }}
                         onAddStep={(planId, title) => plans.addStep(planId, title)}
                         onToggleStep={(planId, stepId) => {
@@ -282,10 +310,8 @@ export function Braindump() {
                         onRemoveStep={(planId, stepId) => plans.removeStep(planId, stepId)}
                         onReorderSteps={(planId, orderedStepIds) => plans.reorderSteps(planId, orderedStepIds)}
                     />
-
                 </RightPanel>
             </div>
-
         </div>
     );
 }
